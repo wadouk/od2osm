@@ -21,9 +21,7 @@
     });
 
     app.ports.authenticate.subscribe(() => {
-        auth.authenticate(() => {
-            app.ports.authenticated()
-        })
+        auth.authenticate()
     })
 
 </script>

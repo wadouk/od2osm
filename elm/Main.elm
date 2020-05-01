@@ -39,10 +39,6 @@ type alias Flags = {}
 
 type Msg = NoOp
     | Authenticate
-    | Authenticated
-
-type Route =
-    Home (Maybe String)
 
 queryParameters : Url -> Dict String (List String)
 queryParameters url =
@@ -76,7 +72,6 @@ update msg model =
     case msg of
         NoOp -> (model, Cmd.none)
         Authenticate -> (model, authenticate())
-        Authenticated -> (model, Cmd.none)
 
 view : Model -> Document Msg
 view model =
@@ -93,8 +88,6 @@ viewAlreadyLogin model token =
     ]
 
 subscriptions : Model -> Sub Msg
-subscriptions _ = authenticated (always Authenticated)
+subscriptions _ = Sub.none
 
 port authenticate : () -> Cmd msg
-
-port authenticated : (() -> msg) -> Sub msg
