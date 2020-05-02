@@ -1,11 +1,22 @@
 port module Main exposing (main)
 
+import Base64
 import Browser exposing (Document, application)
 import Browser.Navigation exposing (Key)
-import Dict exposing (Dict)
+import Bytes.Encode
+import Dict
 import Html exposing (..)
-import Html.Events exposing (onClick)
+import Html.Attributes exposing (disabled)
+import Html.Events exposing (onClick, onInput, onSubmit)
+import Http exposing (Header, emptyBody, expectString)
+import Json.Decode as Decode exposing (Decoder, andThen, decodeValue, field)
+import Json.Decode.Pipeline exposing (required)
 import Url exposing (Protocol(..), Url)
+
+import Xml exposing (Value(..), xmlToJson)
+import Xml.Encode exposing (null)
+import Xml.Decode exposing (decode)
+import Xml.Query exposing (collect, int, string, tag, tags)
 
 
 main : Program Flags Model Msg
@@ -25,58 +36,108 @@ type alias Model =
     { navigationKey : Key
     , flags : Flags
     , origin : Url
-    , token: Maybe String
+    , login : Maybe String
+    , password : Maybe String
     }
 
 init : Flags -> Url -> Key -> ( Model, Cmd Msg )
 init mflags origin navigationKey =
-    let
-        q = queryParameters origin
-        token = Dict.get "oauth_token" q |> Maybe.map List.head |> Maybe.withDefault Nothing
-    in (Model navigationKey mflags origin token, Cmd.none)
+    (Model navigationKey mflags origin Nothing Nothing, Cmd.none)
 
 type alias Flags = {}
 
 type Msg = NoOp
     | Authenticate
+    | FetchUserDetails String String
+    | UserDetailsFetched (Result Http.Error String)
+    | InputLogin String
+    | InputPassword String
 
-queryParameters : Url -> Dict String (List String)
-queryParameters url =
-    let
-        toTuples : String -> List ( String, String )
-        toTuples str =
-            case String.split "=" str of
-                key :: value -> [ ( key, String.join "=" value ) ]
-                [] -> []
-
-        toDict : List ( String, String ) -> Dict String (List String)
-        toDict parameters =
-            List.foldl
-                (\( k, v ) dict -> Dict.update k (addParam v) dict)
-                Dict.empty
-                parameters
-
-        addParam : String -> Maybe (List String) -> Maybe (List String)
-        addParam value maybeValues =
-            case maybeValues of
-                Just values -> Just (value :: values)
-                Nothing -> Just [ value ]
-    in
-    url.query
-        |> Maybe.andThen Url.percentDecode
-        |> Maybe.map (String.split "&" >> List.concatMap toTuples >> toDict)
-        |> Maybe.withDefault Dict.empty
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NoOp -> (model, Cmd.none)
         Authenticate -> (model, authenticate())
+        FetchUserDetails l p ->
+            let url = "https://api.openstreetmap.org/api/0.6/user/details"
+                e = Bytes.Encode.string (l ++ ":" ++ p)
+                        |> Bytes.Encode.encode
+                        |> Base64.fromBytes
+
+                cmd = e |> Maybe.map (\s -> Http.request { method = "GET", headers = [ Http.header "Authorization" ("Basic " ++ s) ], url = url, body = emptyBody, expect = (expectString UserDetailsFetched), timeout = Nothing, tracker = Nothing}) |> Maybe.withDefault Cmd.none
+            in (model, cmd)
+        UserDetailsFetched (Ok s) ->
+            let
+                decodedXml: Value
+                decodedXml = s |> decode
+                    |> Result.toMaybe
+                    |> Maybe.withDefault null
+
+                _ = Debug.log "xml" decodedXml
+
+                person : Value -> Result String User
+                person value =
+                    case value of
+                        Tag "user" attributes _ ->
+                            Dict.get ""
+                        _ -> Ok null
+
+
+                root : Value -> Result String { x : User}
+                root value =
+                    Result.map (\x -> { x = x})
+                        (tag "osm" person value)
+
+                people: Result String User
+                people = root decodedXml |> Result.map .x
+
+                _ = Debug.log "xml" people
+
+            in noOp model
+        UserDetailsFetched (Err e) -> noOp model
+
+
+        InputLogin "" -> ({model | login = Nothing}, Cmd.none)
+        InputLogin s -> ({model | login = Just s}, Cmd.none)
+        InputPassword "" -> ({model | password = Nothing}, Cmd.none)
+        InputPassword s -> ({model | password = Just s}, Cmd.none)
+
+type alias User =
+    { id: Int
+    , displayName: String
+    }
+
+noOp model = (model, Cmd.none)
 
 view : Model -> Document Msg
 view model =
     Document "OpenData 2 OSM"
-        (Maybe.map (viewAlreadyLogin model) model.token |> Maybe.withDefault (viewLogin model))
+        -- (Maybe.map (viewAlreadyLogin model) model.token |> Maybe.withDefault (viewLogin model))
+        [ div
+            [ ]
+            [ form
+                [ onSubmit (Maybe.map2 (FetchUserDetails) model.login model.password |> Maybe.withDefault NoOp) ]
+                [ label
+                    []
+                    [ text "login" ]
+                , input
+                    [ onInput InputLogin ]
+                    []
+                , label
+                    [ ]
+                    [ text "password" ]
+                , input
+                    [ onInput InputPassword ]
+                    []
+
+                , button
+                    [ disabled (Maybe.map2 (\_ _ -> False) model.login model.password |> Maybe.withDefault True)
+                    ]
+                    [ text "Login" ]
+                ]
+             ]
+        ]
 
 viewLogin model =
     [ button [ onClick Authenticate] [ text "Login" ]
@@ -91,3 +152,5 @@ subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
 port authenticate : () -> Cmd msg
+
+port xhr : (String, String) -> Cmd msg
