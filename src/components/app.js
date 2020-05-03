@@ -7,6 +7,8 @@ import Header from './header';
 import Home from '../routes/home';
 import Authenticated from '../routes/Authenticated';
 import style from './app.css'
+import Quests from '../routes/Quests'
+import Quest from '../routes/Quest'
 
 export default class App extends Component {
 	
@@ -25,6 +27,8 @@ export default class App extends Component {
 				<div className={style.app}>
           <Router onChange={this.handleRoute}>
             <Home path="/" />
+            <Quests path="/quests" />
+            <Quest path="/quests/:id/points" />
             <Authenticated path="/authenticated" />
           </Router>
         </div>
