@@ -28,7 +28,7 @@
 	font-size: 100%;
 }
 
-.header nav a {
+.header a {
 	display: inline-block;
 	height: 56px;
 	line-height: 56px;
@@ -41,11 +41,11 @@
 	will-change: background-color;
 }
 
-.header nav a:hover,
-.header nav a:active {
+.header a:hover,
+.header a:active {
 	background: rgba(0,0,0,0.2);
 }
 
-.header nav a.active {
+.header a.active {
 	background: rgba(0,0,0,0.4);
 }

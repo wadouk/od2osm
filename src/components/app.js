@@ -5,6 +5,7 @@ import Header from './header';
 
 // Code-splitting is automated for routes
 import Home from '../routes/home';
+import Authenticated from '../routes/Authenticated';
 import style from './app.css'
 
 export default class App extends Component {
@@ -24,6 +25,7 @@ export default class App extends Component {
 				<div className={style.app}>
           <Router onChange={this.handleRoute}>
             <Home path="/" />
+            <Authenticated path="/authenticated" />
           </Router>
         </div>
 			</div>

@@ -5,12 +5,12 @@ import LoginStatus from '../LoginStatus';
 
 const Header = () => (
 	<header className={style.header}>
-		<h1>Preact App</h1>
+		<h1>OpenData to OpenStreetMap</h1>
     <div className={style.spacer}/>
 		<nav>
 			<Link activeClassName={style.active} href="/">Home</Link>
 		</nav>
-    <LoginStatus/>
+    <Link activeClassName={style.active} href="/authenticated"><LoginStatus/></Link>
 	</header>
 );
 
