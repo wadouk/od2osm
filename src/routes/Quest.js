@@ -10,9 +10,5 @@ export default class Quest extends Component {
   }
 
   render (_, {points}) {
-    console.log({points})
-    return (<ul>{(points || []).map(function ({properties, point, id}) {
-      console.log({properties, point, id})
-      return <li>{properties.name} {id}</li>
-    })}</ul>)}
+    return (<ul>{(points || []).map(({properties, point, id}) => <li>{properties.name} {id}</li>)}</ul>)}
 }
