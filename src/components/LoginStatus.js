@@ -1,11 +1,10 @@
 'use strict';
 
 import { h, Component } from 'preact';
-import style from './style';
 
 var ohauth = require('ohauth');
 var resolveUrl = require('resolve-url');
-
+import style from './loginStatus.css'
 
 // # osm-auth
 //
@@ -313,29 +312,15 @@ export default class Login extends Component {
     const o = {
       displayName: u.getAttribute('display_name'),
       id: u.getAttribute('id'),
-      count: changesets.getAttribute('count')
+      count: changesets.getAttribute('count'),
+      avatar: res.querySelector('img').getAttribute('href')
     };
 
     this.setState(o)
   }
 
   // Note: `user` comes from the URL, courtesy of our router
-	render({}, {authenticated, displayName, id, count}) {
-    console.log({authenticated, displayName})
-
-    if (authenticated) {
-      return (
-        <div class={style.profile}>
-          <p>Hello {displayName}.</p>
-          <button onClick={this.logout}>Logout</button>
-        </div>
-      )
-    } else {
-      return (
-        <div className={style.profile}>
-          <button onClick={this.authenticate}>Authenticate</button>
-        </div>
-      )
-    }
+	render({}, {authenticated, displayName, id, count, avatar}) {
+    return <div className={style.loginStatus}> {authenticated ? (<img src={avatar} alt={displayName} title={displayName}/>) : (<button onClick={this.authenticate}>Authenticate</button>)} </div>
   }
 }
