@@ -49,10 +49,32 @@ const start = async () => {
       cors: true,
     },
     handler: async (request, h) => {
-      const {params} = request
-      const {qid} = params
-      const res = await pool.query('select * from points where qid = $1', [qid])
-      return res.rows
+      try {
+        const {params} = request
+        const {qid} = params
+        const res = await pool.query("select id, properties->'name' as name from points where qid = $1", [qid])
+        return res.rows
+      } catch (e) {
+        console.error(e)
+      }
+    },
+  })
+
+  server.route({
+    method: 'GET',
+    path: '/quests/{qid}/points/{pid}',
+    options: {
+      cors: true,
+    },
+    handler: async (request, h) => {
+      try {
+        const {params} = request
+        const {qid, pid} = params
+        const res = await pool.query('select * from points where qid = $1 and id = $2', [qid, pid])
+        return res.rows
+      } catch (e) {
+        console.error(e)
+      }
     },
   })
 

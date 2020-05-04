@@ -1,4 +1,5 @@
-import { h, Component } from 'preact';
+import {h, Component} from 'preact'
+import {Link} from 'preact-router'
 // import style from './style';
 
 export default class Quest extends Component {
@@ -9,6 +10,11 @@ export default class Quest extends Component {
     this.setState({points})
   }
 
-  render (_, {points}) {
-    return (<ul>{(points || []).map(({properties, point, id}) => <li>{properties.name} {id}</li>)}</ul>)}
+  render({id}, {points}) {
+    const qid = id
+    return (<ul>{(points || []).map(({name, id}) => <li>
+      <Link href={`/quests/${qid}/points/${id}`}>{name}</Link>
+    </li>)}
+    </ul>)
+  }
 }
