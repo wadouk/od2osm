@@ -2,3 +2,12 @@
     height: 400px;
     width: 400px;
 }
+
+.point {
+    display: flex;
+    flex-direction: row;
+}
+
+.point > div {
+    width: 50%;
+}
