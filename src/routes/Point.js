@@ -1,4 +1,4 @@
-import {Component} from 'preact'
+import {h, Component} from 'preact'
 import style from './style.css'
 import leafletCss from 'leaflet/dist/leaflet.css'
 
@@ -55,12 +55,12 @@ export default class Point extends Component {
     this.setState({overpass: d})
   }
 
-  renderPoint(qid, pid, point) {
+  renderPoint(point) {
     const {properties} = point
     const bbox = new LatLng(point.point.y, point.point.x).toBounds(this.state.radius)
     return <div>
       <h2>OpenData</h2>
-      <div>{Object.entries(properties).sort(([k1], [k2]) => k1 > k2).map(([k, v]) => <div><b>{k}</b> = <i>{v}</i></div>)}</div>
+      <div>{this.renderTags(properties)}</div>
       <Map center={{lon: point.point.x, lat: point.point.y}} bounds={bbox} className={style.leafletContainer}>
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -92,10 +92,67 @@ export default class Point extends Component {
     const p1 = new LatLng(lat, lon)
     return <div>
       <div><a href={`https://www.openstreetmap.org/node/${id}`}>{id}</a></div>
-      <div><button>Rapprocher de ce point</button></div>
+      <div><button onClick={this.setAction('merge', {id, lat, lon, tags})} disabled={this.state.action}>Rapprocher de ce point</button></div>
       <div>Distance: {p0.distanceTo(p1).toFixed(0)}m</div>
-      <div>{Object.entries(tags).sort(([k1], [k2]) => k1 > k2).map(([k, v]) => <div><b>{k}</b> = <i>{v}</i></div>)}</div>
+      <div>{this.renderTags(tags)}</div>
     </div>
+  }
+
+  renderTags(t, cb) {
+    return Object.entries(t)
+      .sort(([k1], [k2]) => k1 > k2 ? 1 : -1)
+      .map(([k, v]) => <div> {cb ? cb(k, v): null} <b>{k}</b> : <i>{v}</i></div>)
+  }
+
+  renderDiffTags() {
+    const {point, p} = this.state
+    const {properties} = point
+    const {tags} = p
+
+    const keysP = Object.keys(properties) // opendata
+    const keysT = Object.keys(tags) // overpass
+
+    function diffState(k, v) {
+      let keysFromOSM = keysT.indexOf(k) !== -1
+      let keysFromOpenData = keysP.indexOf(k) !== -1
+      if (keysFromOSM && !keysFromOpenData ) {
+        return "*"
+      } else if (!keysFromOSM && keysFromOpenData) {
+        return "+"
+      } else {
+        if (v === tags[k]) {
+          return "="
+        }
+        return "~"
+      }
+    }
+
+    const newTags = {...tags, ...properties}
+    let u = Object.entries(newTags).map(([k, v]) => diffState(k, v)).reduce((acc, v) => {
+      return acc.indexOf(v) === -1 ? acc.concat(v) : acc
+    }, [])
+    const fullDiff = (() => {
+      if (u.indexOf("+") === -1) {
+        if (u.indexOf("~") === -1) {
+          return "="
+        }
+        return "~"
+      }
+      return "+"
+    })()
+
+    const diffStatusText = {
+      "=": "OSM identique ou mieux que OD",
+      "~": "OD compléte OSM",
+      "+": "OD compléte OSM",
+      "*": "OSM gagne"
+    }
+
+
+    return (<div>
+      <div><b>Status des différences</b> : <i>{diffStatusText[fullDiff]}</i></div>
+      <div>{this.renderTags(newTags, diffState)}</div>
+    </div>)
   }
 
   renderOverpass({elements}) {
@@ -105,19 +162,45 @@ export default class Point extends Component {
     </div>
   }
 
+  setAction = (action, p) => (e) => {
+    this.setState({action, p})
+  }
+
+  renderMerge() {
+    return this.renderDiffTags()
+  }
+
+  renderAdd() {
+    const {point} = this.state
+    return <div>{this.renderPoint(point)}</div>
+  }
+
+  renderAction() {
+    const {action} = this.state
+    switch (action) {
+      case 'add': return this.renderAdd()
+      case 'merge': return this.renderMerge()
+      default: return undefined
+    }
+  }
+
   render({qid, pid}, {point, overpass}) {
     return <div className={style.point}>
-      {point ? this.renderPoint(qid, pid, point) : <div>loading</div>}
+      {point ? this.renderPoint(point) : <div>loading</div>}
       <div>
         <h2>Overpass</h2>
         <div>
           <label htmlFor="radius">Radius</label>
-          <input id="radius" type="number" value={this.state.radius} onChange={(e) => this.setState({radius: e.target.value})}/>
+          <input id="radius" type="number" step={20} value={this.state.radius} onChange={(e) => this.setState({radius: e.target.value})}/>
           <button onClick={this.fetchOverpass.bind(this)}>Conflation</button>
           <div><i>{this.getOverpassQuery()}</i></div>
-          <button>Créer un point ici</button>
         </div>
         {overpass ? this.renderOverpass(overpass) : null}
+      </div>
+      <div>
+        <h2>OSM</h2>
+        <button onClick={this.setAction('add')} disabled={this.state.action}>Créer un point ici</button>
+        {this.renderAction()}
       </div>
     </div>
   }
