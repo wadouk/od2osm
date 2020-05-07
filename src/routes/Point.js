@@ -5,6 +5,13 @@ import leafletCss from 'leaflet/dist/leaflet.css'
 import {Circle, Map, Rectangle, TileLayer} from 'react-leaflet'
 import {LatLng} from 'leaflet'
 
+const diffStatusText = {
+  "=": "même valeur dans OSM et l'OD",
+  "~": "l'OD compléte OSM",
+  "+": "l'OD compléte OSM",
+  "*": "OSM gagne"
+}
+
 export default class Point extends Component {
   state = {
     radius: 20
@@ -101,7 +108,7 @@ export default class Point extends Component {
   renderTags(t, cb) {
     return Object.entries(t)
       .sort(([k1], [k2]) => k1 > k2 ? 1 : -1)
-      .map(([k, v]) => <div> {cb ? cb(k, v): null} <b>{k}</b> : <i>{v}</i></div>)
+      .map(([k, v]) => <div> {cb ? <span className={style.diffStatusText} title={diffStatusText[cb(k, v)]} aria-label={diffStatusText[cb(k, v)]}>{cb(k, v)}</span> : null} <b>{k}</b> : <i>{v}</i></div>)
   }
 
   renderDiffTags() {
@@ -140,14 +147,6 @@ export default class Point extends Component {
       }
       return "+"
     })()
-
-    const diffStatusText = {
-      "=": "OSM identique ou mieux que OD",
-      "~": "OD compléte OSM",
-      "+": "OD compléte OSM",
-      "*": "OSM gagne"
-    }
-
 
     return (<div>
       <div><b>Status des différences</b> : <i>{diffStatusText[fullDiff]}</i></div>

@@ -11,3 +11,7 @@
 .point > div {
     width: 30%;
 }
+
+.diffStatusText {
+    cursor: help;
+}
