@@ -6,6 +6,7 @@ import {Marker, Map, Rectangle, TileLayer, Popup} from 'react-leaflet'
 import {LatLng} from 'leaflet'
 
 import L from 'leaflet';
+import Loader from '../components/Loader'
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -65,9 +66,12 @@ export default class Point extends Component {
       body: body,
     }
 
+    this.setState({loaderOverpass: true})
+
     const r = await fetch("http://overpass-api.de/api/interpreter", options)
 
     const d = await r.json()
+    this.setState({loaderOverpass: false})
     this.setState({overpass: d})
   }
 
@@ -209,13 +213,14 @@ export default class Point extends Component {
 
   render({qid, pid}, {point, overpass}) {
     return <div className={style.point}>
-      {point ? this.renderPoint(point) : <div>loading</div>}
+      {point ? this.renderPoint(point) : <Loader/>}
       <div>
         <h2>Overpass</h2>
         <div>
           <label htmlFor="radius">Radius</label>
           <input id="radius" type="number" step={20} value={this.state.radius} onChange={(e) => this.setState({radius: e.target.value})}/>
           <button onClick={this.fetchOverpass.bind(this)}>Conflation</button>
+          {this.state.loaderOverpass ? <Loader/> : null}
           <div><i>{this.getOverpassQuery()}</i></div>
         </div>
         {overpass ? this.renderOverpass(overpass) : null}
