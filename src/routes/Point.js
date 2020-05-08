@@ -2,8 +2,17 @@ import {h, Component} from 'preact'
 import style from './style.css'
 import leafletCss from 'leaflet/dist/leaflet.css'
 
-import {Circle, Map, Rectangle, TileLayer} from 'react-leaflet'
+import {Marker, Map, Rectangle, TileLayer, Popup} from 'react-leaflet'
 import {LatLng} from 'leaflet'
+
+import L from 'leaflet';
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
 
 const diffStatusText = {
   "=": "même valeur dans OSM et l'OD",
@@ -73,11 +82,19 @@ export default class Point extends Component {
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url='http://{s}.tile.osm.org/{z}/{x}/{y}.png'
         />
-        <Circle center={{lon: point.point.x, lat: point.point.y}} radius={1}/>
+        <Marker draggable={true} position={{lon: point.point.x, lat: point.point.y}} onMoveEnd={this.markerOpendataMoved.bind(this)}><Popup>Opendata</Popup></Marker>
         <Rectangle bounds={bbox}/>
         {this.renderCirclesOverpass()}
       </Map>
     </div>
+  }
+
+  markerOpendataMoved(e) {
+    const {point} = this.state
+    const latLng = e.target.getLatLng()
+    point.point.y = latLng.lat
+    point.point.x = latLng.lng
+    this.setState({point})
   }
 
   renderCirclesElements({elements}) {
@@ -85,7 +102,9 @@ export default class Point extends Component {
   }
 
   renderCirclesElement({lon, lat}) {
-    return <Circle center={{lon, lat}} radius={1}/>
+    return <Marker position={{lon, lat}}>
+      <Popup>Overpass</Popup>
+    </Marker>
   }
 
   renderCirclesOverpass() {
@@ -198,7 +217,6 @@ export default class Point extends Component {
       </div>
       <div>
         <h2>OSM</h2>
-        <button onClick={this.setAction('add')} disabled={this.state.action}>Créer un point ici</button>
         {this.renderAction()}
       </div>
     </div>
