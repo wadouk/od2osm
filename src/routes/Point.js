@@ -19,7 +19,7 @@ export default class Point extends Component {
 
   async componentDidMount() {
     const {qid, pid} = this.props
-    const r = await fetch(`http://localhost:3000/quests/${qid}/points/${pid}`)
+    const r = await fetch(`/api/quests/${qid}/points/${pid}`)
     const d = await r.json()
     this.setState({point: d[0]})
   }

@@ -4,7 +4,7 @@ import {Link} from 'preact-router/match'
 
 export default class Quests extends Component {
   async componentDidMount() {
-    const r = await fetch('http://localhost:3000/quests')
+    const r = await fetch('/api/quests')
     const quests = await r.json()
     this.setState({quests})
   }

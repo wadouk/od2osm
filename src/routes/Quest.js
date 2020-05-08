@@ -5,7 +5,7 @@ import {Link} from 'preact-router'
 export default class Quest extends Component {
   async componentDidMount() {
     const {id} = this.props
-    const r = await fetch(`http://localhost:3000/quests/${id}/points`)
+    const r = await fetch(`/api/quests/${id}/points`)
     const points = await r.json()
     this.setState({points})
   }
