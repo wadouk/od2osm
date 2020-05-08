@@ -47,7 +47,7 @@ export default class Point extends Component {
         .map(u => `node ["${k}"="${u}"](${bboxOverpass}); `).join("\n")
       )[0]
 
-    return `[out:json] [timeout:25] ; ( ${q} ); out; >; out skel qt;`
+    return `[out:json] [timeout:25] ; ( ${q} ); out meta;`
   }
 
   async fetchOverpass () {
@@ -112,15 +112,20 @@ export default class Point extends Component {
     return overpass ? this.renderCirclesElements(overpass) : []
   }
 
-  renderElement = ({id, lat, lon, tags}) => {
+  renderElement = ({tags, ...info}) => {
     const point = this.state.point
     const p0 = new LatLng(point.point.y, point.point.x)
+    const {id, lat, lon, ...others} = info
     const p1 = new LatLng(lat, lon)
+
     return <div>
       <div><a href={`https://www.openstreetmap.org/node/${id}`}>{id}</a></div>
       <div><button onClick={this.setAction('merge', {id, lat, lon, tags})} disabled={this.state.action}>Rapprocher de ce point</button></div>
       <div>Distance: {p0.distanceTo(p1).toFixed(0)}m</div>
+      <h3>Tags</h3>
       <div>{this.renderTags(tags)}</div>
+      <h3>Contexte</h3>
+      <div>{this.renderTags(others)}</div>
     </div>
   }
 
