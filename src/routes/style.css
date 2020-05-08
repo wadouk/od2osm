@@ -9,9 +9,18 @@
 }
 
 .point > div {
-    width: 30%;
+    width: 25%;
 }
 
 .diffStatusText {
     cursor: help;
+}
+
+.renderElement > button {
+    margin-right: 30px;
+    margin-left: auto;
+}
+
+.renderElement {
+    display: flex;
 }
