@@ -253,7 +253,8 @@ const osmAuth = function(o) {
 };
 
 export default osmAuth({
-  oauth_secret: '9WfJnwQxDvvYagx1Ut0tZBsOZ0ZCzAvOje3u1TV0',
-  oauth_consumer_key: 'WLwXbm6XFMG7WrVnE8enIF6GzyefYIN6oUJSxG65',
-  landing: '/login'
+  oauth_secret: process.env.PREACT_APP_OAUTH_SECRET,
+  oauth_consumer_key: process.env.PREACT_APP_OAUTH_CLIENT,
+  landing: '/login',
+  url: process.env.PREACT_APP_OSM
 })

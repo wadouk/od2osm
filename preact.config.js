@@ -1,4 +1,6 @@
-module.exports = function(config) {
+import envVars from 'preact-cli-plugin-env-vars';
+
+module.exports = function(config, env, helpers) {
   config.devServer.proxy = [
     {
       // proxy requests matching a pattern:
@@ -28,4 +30,5 @@ module.exports = function(config) {
       // }
     }
   ];
+  envVars(config, env, helpers);
 };
