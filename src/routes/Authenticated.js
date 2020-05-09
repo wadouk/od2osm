@@ -1,31 +1,38 @@
-import {h, Component} from 'preact'
-
 import osmauth from '../osmauth'
+import {ReducerContext} from '../reducer'
+import {useContext, useEffect} from 'preact/hooks'
 
-export default class Authenticated extends Component {
+export default function Authenticated() {
+  const [state, dispatch] = useContext(ReducerContext)
 
-  componentWillMount() {
+  useEffect(() => {
     const authenticated = osmauth.authenticated()
-    this.setState({authenticated})
-  }
+    dispatch({type: 'authenticated', msg: {authenticated}})
+  }, [])
 
-  logout = () => {
+  const logout = () => {
     osmauth.logout()
-    this.setState({authenticated: false})
+    dispatch({
+      type: 'logout', msg: {
+        authenticated: false,
+        displayName: null,
+        id: null,
+        count: null,
+      },
+    })
   }
 
-  authenticate = () => {
-    osmauth.authenticate(this.done)
+  const authenticate = () => {
+    osmauth.authenticate(done)
   }
 
-  done = (e) => {
+  const done = (e) => {
     const authenticated = osmauth.authenticated()
-    this.setState({authenticated})
+    dispatch({type: 'authenticated', msg: {authenticated}})
   }
 
-  render() {
-    const {authenticated} = this.state
-    return authenticated ? <button onClick={this.logout}>Logout</button> :  <button onClick={this.authenticate}>Authenticate</button>
-  }
+  const {authenticated} = state
+  return authenticated ? <button onClick={logout}>Logout</button> :
+    <button onClick={authenticate}>Authenticate</button>
 }
 

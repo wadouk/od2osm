@@ -1,68 +1,74 @@
-'use strict';
-
-import { h, Component } from 'preact';
+'use strict'
 
 import style from './loginStatus.css'
 import auth from '../osmauth'
+import {useContext, useEffect} from 'preact/hooks'
 
-export default class Login extends Component {
+import {ReducerContext} from '../reducer'
 
-  authenticate = () => {
-    auth.authenticate(this.update);
+export default function Login() {
+
+  const [state, dispatch] = useContext(ReducerContext)
+
+  const authenticate = () => {
+    auth.authenticate(update)
   }
 
-  logout = () => {
-    auth.logout();
-    this.setState({
-      authenticated: false,
-      displayName : null,
-      id : null,
-      count : null
-    })
-  }
-
-  update = () => {
+  const update = () => {
     let authenticated = auth.authenticated()
-    this.setState({authenticated})
+    dispatch({type: 'authenticated', msg: {authenticated}})
 
     if (authenticated) {
       auth.xhr({
         method: 'GET',
-        path: '/api/0.6/user/details'
-      }, this.done);
+        path: '/api/0.6/user/details',
+      }, done)
     }
   }
 
-  componentWillMount() {
+  useEffect(() => {
     const oauth_token = new URLSearchParams(window.location.search.slice(1)).get("oauth_token")
     if (oauth_token) {
-      opener.authComplete(window.location.href);
-      window.close();
+      opener.authComplete(window.location.href)
+      window.close()
     }
 
-    this.update()
-  }
+    update()
+  }, [])
 
-  done = (err, res) => {
+  const done = (err, res) => {
     if (err) {
-      this.setState({userDetailsErr: err})
-      return;
+      dispatch({
+        type: 'fail', msg: {
+          userDetailsErr: err,
+        },
+      })
+      return
     }
 
-    const u = res.getElementsByTagName('user')[0];
-    const changesets = res.getElementsByTagName('changesets')[0];
+    const u = res.getElementsByTagName('user')[0]
+    const changesets = res.getElementsByTagName('changesets')[0]
     const o = {
       displayName: u.getAttribute('display_name'),
       id: u.getAttribute('id'),
       count: changesets.getAttribute('count'),
-      avatar: res.querySelector('img').getAttribute('href')
-    };
+      avatar: (res.querySelector('img') ? res.querySelector('img').getAttribute('href') : null),
+    }
 
-    this.setState(o)
+    dispatch({msg: o, type: 'done'})
   }
 
-  // Note: `user` comes from the URL, courtesy of our router
-	render({}, {authenticated, displayName, id, count, avatar}) {
-    return <div className={style.loginStatus}> {authenticated ? (<img src={avatar} alt={displayName} title={displayName}/>) : (<button onClick={this.authenticate}>Authenticate</button>)} </div>
+  const renderAuthenticated = (avatar, displayName) => {
+    return avatar ? <img src={avatar} alt={displayName} title={displayName}/> :
+      <span alt={displayName} title={displayName}>{displayName}</span>
   }
+
+  const renderEmpty = () => {
+    return <button onClick={authenticate}>Authenticate</button>
+  }
+
+  console.log({state})
+  const {authenticated, displayName, id, count, avatar} = state
+  return <div
+    className={style.loginStatus}> {authenticated ? renderAuthenticated(avatar, displayName) : renderEmpty()} </div>
 }
