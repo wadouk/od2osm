@@ -14,6 +14,7 @@ L'outil stockera les points déjà rapprochés pour ne pas les re proposer par d
 
 ![screenshot](doc/change.jpg)
 
+# Only for dev
 ## CLI Commands
 
 ``` bash
