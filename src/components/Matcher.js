@@ -6,23 +6,77 @@ import Loader from './Loader'
 
 import leafletCss from 'leaflet/dist/leaflet.css'
 
+const ACTION_POINT = 'point'
+const ACTION_ASYNC = 'async'
+const ACTION_OVERPASS = 'overpass'
+const ACTION_RADIUS_CHANGED = 'radiusChanged'
+const ACTION_POINT_MOVED = 'pointMoved'
+const ACTION_MORE_OSM = 'moreOSM'
+const ACTION_MORE_OD = 'moreOD'
+const ACTION_INPUT_VALUE = 'inputValue'
+const ACTION_VALUE_OD = 'valueOD'
+const ACTION_VALUE_OSM = 'valueOSM'
+const ACTION_CHANGE_SET_ADD = 'changesetAdd'
+
 const reducer = (state, {type, msg}) => {
   switch (type) {
-    case 'point':
-    case 'async':
-    case 'overpass':
-    case 'action':
-    case 'radiusChanged':
+    case ACTION_POINT:
+    case ACTION_ASYNC:
+    case ACTION_OVERPASS:
+    case ACTION_RADIUS_CHANGED:
       return {...state, ...msg}
-    case 'pointMoved':
-      const {point} = state
-      const {lat, lng} = msg
-      const newPoint = {x: lng, y: lat}
-      return {...state, point: {...point, point:newPoint}}
+
+    case ACTION_POINT_MOVED:
+      return (() => {
+        const {point} = state
+        const {lat, lng} = msg
+        const newPoint = {x: lng, y: lat}
+        return {...state, point: {...point, point: newPoint}}
+      })()
+
+    case ACTION_MORE_OSM:
+      return (() => {
+        const {overpass, point} = state
+        const {properties} = point
+        const {tags} = getOsmPoint(overpass)
+        const newMerged = {...properties, ...tags}
+        return {...state, merged: newMerged}
+      })()
+
+    case ACTION_MORE_OD:
+      return (() => {
+        const {overpass, point} = state
+        const {properties} = point
+        const {tags} = getOsmPoint(overpass)
+        const newMerged = {...tags, ...properties}
+        return {...state, merged: newMerged}
+      })()
+
+    case ACTION_INPUT_VALUE:
+    case ACTION_VALUE_OD:
+    case ACTION_VALUE_OSM:
+      return (() => {
+        const {merged} = state
+        const {key, value} = msg
+        const newMerged = {...merged, [key]: value}
+        return {...state, merged: newMerged}
+      })()
+
+    case ACTION_CHANGE_SET_ADD:
+      return ( () => {
+        const {changes, merged} = state
+        const newChanges = (changes || []).concat(merged)
+        return {...state, point: undefined, merged: undefined, overpass: undefined, changes: newChanges}
+      })
     default:
       console.warn('type inconnu', {type})
       return state
   }
+}
+
+function getOsmPoint(overpass) {
+  const {elements} = overpass || {}
+  return elements && elements.length > 0 && elements[0] || {}
 }
 
 delete L.Icon.Default.prototype._getIconUrl
@@ -33,22 +87,23 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 })
 
-const diffStatusText = {
-  "=": "même valeur dans OSM et l'OD",
-  "~": "l'OD compléte OSM",
-  "+": "l'OD compléte OSM",
-  "*": "OSM gagne",
-}
-
 export default function Matcher({qid, pid}) {
   const [state, dispatch] = useReducer(reducer, {radius: 20})
 
-  const {point, radius, overpass, action, p} = state
+  function emit(type, msg) {
+    dispatch({type, msg})
+  }
+
+  const clickEmit = (action) => (e) => {
+    emit(action)
+  }
+
+  const {point, radius, overpass, loaderOverpass, merged} = state
 
   useEffect(async () => {
     const r = await fetch(`/api/quests/${qid}/points/${pid}`)
     const d = await r.json()
-    dispatch({type: 'point', msg: {point: d[0]}})
+    emit(ACTION_POINT, {point: d[0]})
   }, [])
 
   function getOverpassQuery() {
@@ -68,6 +123,9 @@ export default function Matcher({qid, pid}) {
   }
 
   async function fetchOverpass() {
+    if (!point) {
+      return
+    }
     const query = getOverpassQuery()
     let body = new URLSearchParams({
       data: query,
@@ -82,24 +140,16 @@ export default function Matcher({qid, pid}) {
       body: body,
     }
 
-    dispatch({type: 'async', msg: {loaderOverpass: true}})
+    emit(ACTION_ASYNC, {loaderOverpass: true})
     const r = await fetch("http://overpass-api.de/api/interpreter", options)
 
     const d = await r.json()
-    dispatch({type: 'async', msg: {loaderOverpass: false}})
-    dispatch({type: 'overpass', msg: {overpass: d}})
-  }
-
-  function renderPoint() {
-    const {properties} = point
-    return <div>
-      <h2>OpenData</h2>
-      <div>{renderTags(properties)}</div>
-    </div>
+    emit(ACTION_ASYNC, {loaderOverpass: false})
+    emit(ACTION_OVERPASS, {overpass: d})
   }
 
   function markerOpendataMoved(e) {
-    dispatch({type: 'pointMoved', msg: e.target.getLatLng()})
+    emit(ACTION_POINT_MOVED, e.target.getLatLng())
   }
 
 
@@ -117,115 +167,10 @@ export default function Matcher({qid, pid}) {
     return overpass ? renderCirclesElements(overpass) : []
   }
 
-  function renderElement({tags, ...info}) {
-    const p0 = new LatLng(point.point.y, point.point.x)
-    const {id, lat, lon, ...others} = info
-    const p1 = new LatLng(lat, lon)
-
-    return <div>
-      <div className={style.renderElement}>
-        <span>Distance: {p0.distanceTo(p1).toFixed(0)}m</span>
-        &nbsp;
-        <a href={`https://www.openstreetmap.org/node/${id}`}>{id}</a>
-        &nbsp;
-        <button onClick={setAction('merge', {id, lat, lon, tags})} disabled={action}
-                className={style.conflateThis}>
-          Rapprocher de ce point
-        </button>
-      </div>
-      <h3>Tags</h3>
-      <div>{renderTags(tags)}</div>
-      <h3>Contexte</h3>
-      <div>{renderTags(others)}</div>
-    </div>
-  }
-
-  function renderTags(t, cb) {
-    return Object.entries(t)
-      .sort(([k1], [k2]) => k1 > k2 ? 1 : -1)
-      .map(([k, v]) => <div> {cb ? <span className={style.diffStatusText} title={diffStatusText[cb(k, v)]}
-                                         aria-label={diffStatusText[cb(k, v)]}>{cb(k, v)}</span> : null}
-        <b>{k}</b> : <i>{v}</i></div>)
-  }
-
-  function renderDiffTags() {
-    const {properties} = point
-    const {tags} = p
-
-    const keysP = Object.keys(properties) // opendata
-    const keysT = Object.keys(tags) // overpass
-
-    function diffState(k, v) {
-      let keysFromOSM = keysT.indexOf(k) !== -1
-      let keysFromOpenData = keysP.indexOf(k) !== -1
-      if (keysFromOSM && !keysFromOpenData) {
-        return "*"
-      } else if (!keysFromOSM && keysFromOpenData) {
-        return "+"
-      } else {
-        if (v === tags[k]) {
-          return "="
-        }
-        return "~"
-      }
+  function renderMap() {
+    if (!point) {
+      return <Loader/>
     }
-
-    const newTags = {...tags, ...properties}
-    let u = Object.entries(newTags).map(([k, v]) => diffState(k, v)).reduce((acc, v) => {
-      return acc.indexOf(v) === -1 ? acc.concat(v) : acc
-    }, [])
-    const fullDiff = (() => {
-      if (u.indexOf("+") === -1) {
-        if (u.indexOf("~") === -1) {
-          return "="
-        }
-        return "~"
-      }
-      return "+"
-    })()
-
-    return (<div>
-      <h3>Status des différences</h3>
-      <div className={style.renderElement}>
-        <i>{diffStatusText[fullDiff]}</i>
-        <button onClick={setAction()}>Annuler</button>
-      </div>
-      <h3>Fusion des tags</h3>
-      <div>{renderTags(newTags, diffState)}</div>
-    </div>)
-  }
-
-  function renderOverpass({elements}) {
-    return <div>
-      <div>Résultat : {elements.length}</div>
-      {elements.map(renderElement)}
-    </div>
-  }
-
-  const setAction = (action, p) => (e) => {
-    dispatch({type: 'action', msg: {action, p}})
-  }
-
-  function renderMerge() {
-    return renderDiffTags()
-  }
-
-  function renderAdd() {
-    return <div>{renderPoint(point)}</div>
-  }
-
-  function renderAction() {
-    switch (action) {
-      case 'add':
-        return renderAdd()
-      case 'merge':
-        return renderMerge()
-      default:
-        return undefined
-    }
-  }
-
-  function renderMap(point) {
     const bbox = new LatLng(point.point.y, point.point.x).toBounds(radius)
     return <Map center={{lon: point.point.x, lat: point.point.y}} bounds={bbox} className={style.leafletContainer}>
       <TileLayer
@@ -239,28 +184,68 @@ export default function Matcher({qid, pid}) {
     </Map>
   }
 
+  const {properties} = point || {}
+  const {tags} = getOsmPoint(overpass)
+  const allKeyTags = Object.keys({...tags, ...properties})
+
+  useEffect(async () => {
+    await fetchOverpass()
+  }, [point])
+
+  function radiusChanged(e) {
+    emit(ACTION_RADIUS_CHANGED, {radius: e.target.value})
+  }
+
   return <div className={style.point}>
-    {point ? renderPoint() : <Loader/>}
     <div>
       <h2>Rapprochement</h2>
       <div className={style.renderElement}>
         <label htmlFor="radius">Radius</label>
-        <input id="radius" type="number" step={20} value={state.radius}
-               onChange={(e) => dispatch({type: 'radiusChanged', msg: {radius: e.target.value}})}/>
+        <input id="radius" type="number" step={20} value={radius}
+               onChange={radiusChanged}/>
         <button onClick={fetchOverpass}>Conflation</button>
+
       </div>
-      <div>
-        <div><i>{getOverpassQuery().split('\n').map(t => [t, <br/>])}</i></div>
-        {point ? renderMap(point) : null}
-      </div>
+      {renderMap()}
     </div>
     <div>
-      <h2>Overpass {state.loaderOverpass ? <Loader/> : null}</h2>
-      {overpass ? renderOverpass(overpass) : null}
-    </div>
-    <div>
-      <h2>OSM</h2>
-      {renderAction()}
+      <table>
+        <tr>
+          <th>Attributs</th>
+          <th>OpenData</th>
+          <th>OSM {loaderOverpass ? <Loader/> : null}</th>
+          <td>
+            <button disabled={!properties} onClick={clickEmit(ACTION_MORE_OD)}>Plutôt OD</button>
+            <button disabled={!tags} onClick={clickEmit(ACTION_MORE_OSM)}>Plutôt OSM</button>
+          </td>
+        </tr>
+        {allKeyTags.map(v => {
+          return <tr>
+            <td className={style.keys}>{v} :</td>
+            <td>{properties && properties[v]}</td>
+            <td>{tags && tags[v]}</td>
+            <td>
+              <input type="text" value={merged && merged[v]} onChange={e => emit(ACTION_INPUT_VALUE, {key:v, value: e.target.value})}/>
+              <button
+                  disabled={!merged || (merged && !properties.hasOwnProperty(v) || merged[v] === properties[v])}
+                  onClick={e => emit(ACTION_INPUT_VALUE, {key:v, value: properties[v]})}>
+                OD
+              </button>
+              <button
+                disabled={!merged || (merged && !tags.hasOwnProperty(v) || merged[v] === tags[v])}
+                onClick={e => emit(ACTION_INPUT_VALUE, {key:v, value: tags[v]})}>
+                OSM
+              </button>
+            </td>
+          </tr>
+        })}
+        <tr>
+          <td colSpan={3}></td>
+          <td>
+            <button disabled={!merged} onClick={clickEmit(ACTION_CHANGE_SET_ADD)}>Ajouter au changeset</button>
+          </td>
+        </tr>
+      </table>
     </div>
   </div>
 }
