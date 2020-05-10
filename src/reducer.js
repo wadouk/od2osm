@@ -63,8 +63,8 @@ const reducer = (state, {type, msg}) => {
 
     case ACTION_CHANGE_SET_ADD:
       return (() => {
-        const {changes, merged, overpass} = state
-        const element = overpass.elements[0]
+        const {changes, merged, overpass, point} = state
+        const element = overpass.elements.length > 0 && overpass.elements[0] || {lat: point.point.y, lng: point.point.x, type : 'node'}
         const newChanges = changes.concat({...element, tags: merged})
         return {...state, point: undefined, merged: undefined, overpass: undefined, changes: newChanges}
       })()

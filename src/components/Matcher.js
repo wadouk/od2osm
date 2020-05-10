@@ -142,12 +142,36 @@ export default function Matcher({qid, pid}) {
     emit(ACTION_RADIUS_CHANGED, {radius: e.target.value})
   }
 
+  function renderTags(v) {
+    return <tr>
+      <td className={style.keys}>{v} :</td>
+      <td>{properties && properties[v]}</td>
+      <td>{tags && tags[v]}</td>
+      <td>
+        <input type="text" value={merged && merged[v]}
+               onChange={e => emit(ACTION_INPUT_VALUE, {key: v, value: e.target.value})}/>
+        <button
+          disabled={!merged || (merged && properties && !properties.hasOwnProperty(v) || (merged && properties && merged[v] === properties[v]) || (merged && !properties))}
+          onClick={e => emit(ACTION_VALUE_OD, {key: v, value: properties[v]})}>
+          OD
+        </button>
+        <button
+          disabled={!merged || (merged && tags && !tags.hasOwnProperty(v) || (merged && tags && merged[v] === tags[v]) || (merged && !tags))}
+          onClick={e => emit(ACTION_VALUE_OSM, {key: v, value: tags[v]})}>
+          OSM
+        </button>
+      </td>
+    </tr>
+  }
+
   return <div className={style.point}>
     <div>
       <h2>Rapprochement</h2>
       <div className={style.renderElement}>
         <label htmlFor="radius">Radius</label>
-        <input id="radius" type="number" step={20} value={radius}
+        <input id="radius" type="number"
+               step={20}
+               value={radius}
                onChange={radiusChanged}/>
         <button onClick={fetchOverpass}>Conflation</button>
 
@@ -171,33 +195,16 @@ export default function Matcher({qid, pid}) {
             </button>
           </td>
         </tr>
-        {allKeyTags.map(v => {
-          return <tr>
-            <td className={style.keys}>{v} :</td>
-            <td>{properties && properties[v]}</td>
-            <td>{tags && tags[v]}</td>
-            <td>
-              <input type="text" value={merged && merged[v]} onChange={e => emit(ACTION_INPUT_VALUE, {key:v, value: e.target.value})}/>
-              <button
-                  disabled={!merged || (merged && !properties.hasOwnProperty(v) || merged[v] === properties[v])}
-                  onClick={e => emit(ACTION_VALUE_OD, {key:v, value: properties[v]})}>
-                OD
-              </button>
-              <button
-                disabled={!merged || (merged && !tags.hasOwnProperty(v) || merged[v] === tags[v])}
-                onClick={e => emit(ACTION_VALUE_OSM, {key:v, value: tags[v]})}>
-                OSM
-              </button>
-            </td>
-          </tr>
-        })}
+        {allKeyTags.map(renderTags)}
         <tr>
-          <td colSpan={3}></td>
+          <td colSpan={3}/>
           <td>
             <button disabled={!merged} onClick={clickEmit(ACTION_CHANGE_SET_ADD)}>Ajouter au changeset</button>
+            <div>{merged ? (overpass && overpass.elements.length > 0 ? 'Modification': 'Ajout') : '' }</div>
           </td>
         </tr>
       </table>
     </div>
   </div>
+
 }

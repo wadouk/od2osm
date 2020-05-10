@@ -13,7 +13,7 @@ export default function Changes() {
   function renderChange({tags, ...props}) {
     const {id} = props
     return <div>
-      <h1>{id ? `Modificiation ${id}` : 'Cŕeation'}</h1>
+      <h1>{id ? `Modificiation ${id}` : 'Création'}</h1>
       <div>
         <h2>Attributs</h2>
         {renderTags(props)}
