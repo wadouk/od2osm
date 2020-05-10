@@ -1,17 +1,15 @@
-import {h, Component} from 'preact'
 import {Link} from 'preact-router/match'
-// import style from './style';
+import {useEffect, useState} from 'preact/hooks'
 
-export default class Quests extends Component {
-  async componentDidMount() {
+export default function Quests(){
+  const [quests, setValue] = useState([])
+  useEffect(async () => {
     const r = await fetch('/api/quests')
     const quests = await r.json()
-    this.setState({quests})
-  }
+    setValue(quests)
+  }, [])
 
-  render(_, {quests}) {
     return <ul>
-      {(quests || [] ).map(({id, name}) => <Link href={`/quests/${id}/points`}>{name}</Link>)}
+      {quests.map(({id, name}) => <Link href={`/quests/${id}/points`}>{name}</Link>)}
     </ul>
-  }
 }

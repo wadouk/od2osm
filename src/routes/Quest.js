@@ -1,20 +1,18 @@
-import {h, Component} from 'preact'
 import {Link} from 'preact-router'
-// import style from './style';
+import {useEffect, useState} from 'preact/hooks'
 
-export default class Quest extends Component {
-  async componentDidMount() {
+export default function Quest({id}) {
+  const [points, setValue] = useState([])
+  useEffect(async () => {
     const {id} = this.props
     const r = await fetch(`/api/quests/${id}/points`)
     const points = await r.json()
-    this.setState({points})
-  }
+    setValue(points)
+  }, [])
 
-  render({id}, {points}) {
-    const qid = id
-    return (<ul>{(points || []).map(({name, id}) => <li>
-      <Link href={`/quests/${qid}/points/${id}`}>{name}</Link>
-    </li>)}
-    </ul>)
-  }
+  const qid = id
+  return (<ul>{points.map(({name, id}) => <li>
+    <Link href={`/quests/${qid}/points/${id}`}>{name}</Link>
+  </li>)}
+  </ul>)
 }
