@@ -10,7 +10,9 @@ L'idée est de passer sur chaque point, de faire une requête overpass pour trou
 
 L'outil stockera les points déjà rapprochés pour ne pas les re proposer par défaut.
 
-![screenshot](https://user-images.githubusercontent.com/787448/81051596-445d8280-8ec2-11ea-979c-91f3e0894706.jpg)
+![screenshot](doc/merge.jpg)
+
+![screenshot](doc/change.jpg)
 
 ## CLI Commands
 
