@@ -8,14 +8,25 @@
     flex-direction: row;
 }
 
-.point > div {
-    width: 40%;
+.firstCol {
+    max-width: 30em;
+}
+.secondCol {
+    flex: 1;
 }
 
 .keys {
     font-weight: bold;
     text-align: right;
     padding-right: 10px;
+}
+
+.value {
+    min-width: 15em;
+    max-width: 15em;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .diffStatusText {

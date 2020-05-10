@@ -145,8 +145,8 @@ export default function Matcher({qid, pid}) {
   function renderTags(v) {
     return <tr>
       <td className={style.keys}>{v} :</td>
-      <td>{properties && properties[v]}</td>
-      <td>{tags && tags[v]}</td>
+      <td className={style.value} alt={properties && properties[v]} title={properties && properties[v]} aria-label={properties && properties[v]}>{properties && properties[v]}</td>
+      <td className={style.value} alt={tags && tags[v]} title={tags && tags[v]} aria-label={tags && tags[v]}>{tags && tags[v]}</td>
       <td>
         <input type="text" value={merged && merged[v]}
                onChange={e => emit(ACTION_INPUT_VALUE, {key: v, value: e.target.value})}/>
@@ -165,7 +165,7 @@ export default function Matcher({qid, pid}) {
   }
 
   return <div className={style.point}>
-    <div>
+    <div className={style.firstCol}>
       <h2>Rapprochement</h2>
       <div className={style.renderElement}>
         <label htmlFor="radius">Radius</label>
@@ -174,11 +174,11 @@ export default function Matcher({qid, pid}) {
                value={radius}
                onChange={radiusChanged}/>
         <button onClick={fetchOverpass}>Conflation</button>
-
       </div>
+      <p>Vous pouvez déplacer le marqueur de l'open data pour vous rapprocher du point venant d'OSM ou augmenter le rayon de recherche.</p>
       {renderMap()}
     </div>
-    <div>
+    <div className={style.secondCol}>
       <table>
         <tr>
           <th>Attributs</th>
@@ -200,10 +200,15 @@ export default function Matcher({qid, pid}) {
           <td colSpan={3}/>
           <td>
             <button disabled={!merged} onClick={clickEmit(ACTION_CHANGE_SET_ADD)}>Ajouter au changeset</button>
-            <div>{merged ? (overpass && overpass.elements.length > 0 ? 'Modification': 'Ajout') : '' }</div>
           </td>
         </tr>
       </table>
+      <ul>
+        {merged ? (overpass && overpass.elements.length > 0 ?
+          <li>Un élément dans OSM a été trouvé, vous pouvez le completer éventuellement avec les données de l'open data'</li>:
+          <li>Aucun point pré-existant n'a été trouvé, vous allez créer ce point</li>
+        ) : null}
+      </ul>
     </div>
   </div>
 
