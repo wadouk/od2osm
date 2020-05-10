@@ -1,4 +1,4 @@
-import {useEffect, useReducer} from 'preact/hooks'
+import {useEffect} from 'preact/hooks'
 import L, {LatLng} from 'leaflet'
 import {Map, Marker, Popup, Rectangle, TileLayer} from 'react-leaflet'
 import style from '../routes/style.css'
@@ -6,73 +6,19 @@ import Loader from './Loader'
 
 import leafletCss from 'leaflet/dist/leaflet.css'
 
-const ACTION_POINT = 'point'
-const ACTION_ASYNC = 'async'
-const ACTION_OVERPASS = 'overpass'
-const ACTION_RADIUS_CHANGED = 'radiusChanged'
-const ACTION_POINT_MOVED = 'pointMoved'
-const ACTION_MORE_OSM = 'moreOSM'
-const ACTION_MORE_OD = 'moreOD'
-const ACTION_INPUT_VALUE = 'inputValue'
-const ACTION_VALUE_OD = 'valueOD'
-const ACTION_VALUE_OSM = 'valueOSM'
-const ACTION_CHANGE_SET_ADD = 'changesetAdd'
-
-const reducer = (state, {type, msg}) => {
-  switch (type) {
-    case ACTION_POINT:
-    case ACTION_ASYNC:
-    case ACTION_OVERPASS:
-    case ACTION_RADIUS_CHANGED:
-      return {...state, ...msg}
-
-    case ACTION_POINT_MOVED:
-      return (() => {
-        const {point} = state
-        const {lat, lng} = msg
-        const newPoint = {x: lng, y: lat}
-        return {...state, point: {...point, point: newPoint}}
-      })()
-
-    case ACTION_MORE_OSM:
-      return (() => {
-        const {overpass, point} = state
-        const {properties} = point
-        const {tags} = getOsmPoint(overpass)
-        const newMerged = {...properties, ...tags}
-        return {...state, merged: newMerged}
-      })()
-
-    case ACTION_MORE_OD:
-      return (() => {
-        const {overpass, point} = state
-        const {properties} = point
-        const {tags} = getOsmPoint(overpass)
-        const newMerged = {...tags, ...properties}
-        return {...state, merged: newMerged}
-      })()
-
-    case ACTION_INPUT_VALUE:
-    case ACTION_VALUE_OD:
-    case ACTION_VALUE_OSM:
-      return (() => {
-        const {merged} = state
-        const {key, value} = msg
-        const newMerged = {...merged, [key]: value}
-        return {...state, merged: newMerged}
-      })()
-
-    case ACTION_CHANGE_SET_ADD:
-      return ( () => {
-        const {changes, merged} = state
-        const newChanges = (changes || []).concat(merged)
-        return {...state, point: undefined, merged: undefined, overpass: undefined, changes: newChanges}
-      })
-    default:
-      console.warn('type inconnu', {type})
-      return state
-  }
-}
+import {
+  ACTION_POINT,
+  ACTION_ASYNC,
+  ACTION_OVERPASS,
+  ACTION_RADIUS_CHANGED,
+  ACTION_POINT_MOVED,
+  ACTION_MORE_OSM,
+  ACTION_MORE_OD,
+  ACTION_INPUT_VALUE,
+  ACTION_VALUE_OD,
+  ACTION_VALUE_OSM,
+  ACTION_CHANGE_SET_ADD, useContextReducer,
+} from '../reducer'
 
 function getOsmPoint(overpass) {
   const {elements} = overpass || {}
@@ -88,14 +34,14 @@ L.Icon.Default.mergeOptions({
 })
 
 export default function Matcher({qid, pid}) {
-  const [state, dispatch] = useReducer(reducer, {radius: 20})
+  const [state, dispatch] = useContextReducer()
 
   function emit(type, msg) {
     dispatch({type, msg})
   }
 
-  const clickEmit = (action) => (e) => {
-    emit(action)
+  const clickEmit = (action, msg) => (e) => {
+    emit(action, msg)
   }
 
   const {point, radius, overpass, loaderOverpass, merged} = state
@@ -190,7 +136,7 @@ export default function Matcher({qid, pid}) {
 
   useEffect(async () => {
     await fetchOverpass()
-  }, [point])
+  }, [point && point.id])
 
   function radiusChanged(e) {
     emit(ACTION_RADIUS_CHANGED, {radius: e.target.value})
@@ -215,8 +161,14 @@ export default function Matcher({qid, pid}) {
           <th>OpenData</th>
           <th>OSM {loaderOverpass ? <Loader/> : null}</th>
           <td>
-            <button disabled={!properties} onClick={clickEmit(ACTION_MORE_OD)}>Plutôt OD</button>
-            <button disabled={!tags} onClick={clickEmit(ACTION_MORE_OSM)}>Plutôt OSM</button>
+            <button disabled={!properties}
+                    onClick={clickEmit(ACTION_MORE_OD, tags)}>
+              Plutôt OD
+            </button>
+            <button disabled={!tags}
+                    onClick={clickEmit(ACTION_MORE_OSM, tags)}>
+              Plutôt OSM
+            </button>
           </td>
         </tr>
         {allKeyTags.map(v => {
@@ -228,12 +180,12 @@ export default function Matcher({qid, pid}) {
               <input type="text" value={merged && merged[v]} onChange={e => emit(ACTION_INPUT_VALUE, {key:v, value: e.target.value})}/>
               <button
                   disabled={!merged || (merged && !properties.hasOwnProperty(v) || merged[v] === properties[v])}
-                  onClick={e => emit(ACTION_INPUT_VALUE, {key:v, value: properties[v]})}>
+                  onClick={e => emit(ACTION_VALUE_OD, {key:v, value: properties[v]})}>
                 OD
               </button>
               <button
                 disabled={!merged || (merged && !tags.hasOwnProperty(v) || merged[v] === tags[v])}
-                onClick={e => emit(ACTION_INPUT_VALUE, {key:v, value: tags[v]})}>
+                onClick={e => emit(ACTION_VALUE_OSM, {key:v, value: tags[v]})}>
                 OSM
               </button>
             </td>

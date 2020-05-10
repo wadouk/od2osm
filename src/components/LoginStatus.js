@@ -2,13 +2,14 @@
 
 import style from './loginStatus.css'
 import auth from '../osmauth'
-import {useContext, useEffect} from 'preact/hooks'
-
-import {ReducerContext} from '../reducer'
+import {useEffect} from 'preact/hooks'
+import {useContextReducer} from '../reducer'
 
 export default function Login() {
 
-  const [state, dispatch] = useContext(ReducerContext)
+  const [state, dispatch] = useContextReducer()
+
+  console.log({state})
 
   const authenticate = () => {
     auth.authenticate(update)
@@ -67,7 +68,6 @@ export default function Login() {
     return <button onClick={authenticate}>Authenticate</button>
   }
 
-  console.log({state})
   const {authenticated, displayName, id, count, avatar} = state
   return <div
     className={style.loginStatus}> {authenticated ? renderAuthenticated(avatar, displayName) : renderEmpty()} </div>
