@@ -19,6 +19,9 @@ const reducer = (state, {type, msg}) => {
     case 'authenticated':
     case 'fail':
     case 'logout':
+    case 'comment':
+    case 'dumb':
+    case 'loader':
       return {...state, ...msg}
 
     case ACTION_POINT:
@@ -64,7 +67,7 @@ const reducer = (state, {type, msg}) => {
     case ACTION_CHANGE_SET_ADD:
       return (() => {
         const {changes, merged, overpass, point} = state
-        const element = overpass.elements.length > 0 && overpass.elements[0] || {lat: point.point.y, lng: point.point.x, type : 'node'}
+        const element = overpass.elements.length > 0 && overpass.elements[0] || {lat: point.point.y, lon: point.point.x, type : 'node'}
         const newChanges = changes.concat({...element, tags: merged})
         return {...state, point: undefined, merged: undefined, overpass: undefined, changes: newChanges}
       })()

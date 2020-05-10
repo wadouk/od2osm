@@ -9,8 +9,6 @@ export default function Login() {
 
   const [state, dispatch] = useContextReducer()
 
-  console.log({state})
-
   const authenticate = () => {
     auth.authenticate(update)
   }
@@ -52,7 +50,7 @@ export default function Login() {
     const o = {
       displayName: u.getAttribute('display_name'),
       id: u.getAttribute('id'),
-      count: changesets.getAttribute('count'),
+      changeSetCount: changesets.getAttribute('count'),
       avatar: (res.querySelector('img') ? res.querySelector('img').getAttribute('href') : null),
     }
 
