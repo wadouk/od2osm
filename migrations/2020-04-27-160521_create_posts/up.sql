@@ -47,3 +47,6 @@ create unique index conflation_id_uindex
 
 alter table conflation alter column osmid drop not null;
 
+alter table conflation
+    add action varchar;
+

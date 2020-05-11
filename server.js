@@ -88,7 +88,24 @@ const start = async () => {
       try {
         const {params} = request
         const {qid, pid, osmId} = params
-        await pool.query('insert into conflation (qid, pid, osmid) values ($1, $2, $3)', [qid, pid, osmId])
+        await pool.query('insert into conflation (qid, pid, action, osmid) values ($1, $2, $3, $4)', [qid, pid, 'valid', osmId])
+        return h.response()
+      } catch (e) {
+        console.error(e)
+      }
+    },
+  })
+  server.route({
+    method: 'PATCH',
+    path: '/quests/{qid}/points/{pid}/conflation',
+    options: {
+      cors: true,
+    },
+    handler: async (request, h) => {
+      try {
+        const {params} = request
+        const {qid, pid} = params
+        await pool.query('insert into conflation (qid, pid, action) values ($1, $2, $3)', [qid, pid, 'create'])
         return h.response()
       } catch (e) {
         console.error(e)

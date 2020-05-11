@@ -49,11 +49,14 @@ export default function Matcher({qid, pid}) {
     emit(action, msg)
     switch (action) {
       case ACTION_VALID_CONFLATION:
-        if (overpass && overpass.elements && overpass.elements.length > 0) {
-          await fetch(`/api/quests/${qid}/points/${pid}/conflation/${overpass.elements[0].id}`, {
-            method: 'PATCH',
-          })
-        }
+        await fetch(`/api/quests/${qid}/points/${pid}/conflation/${overpass.elements[0].id}`, {
+          method: 'PATCH',
+        })
+        break
+      case ACTION_CREATE_CONFLATION:
+        await fetch(`/api/quests/${qid}/points/${pid}/conflation`, {
+          method: 'PATCH',
+        })
         break
       case ACTION_CANCEL_CONFLATION:
         await fetch(`/api/quests/${qid}/points/${pid}/conflation`, {
@@ -204,7 +207,7 @@ export default function Matcher({qid, pid}) {
 
   console.log(state)
 
-  const validConflationDisabled = !overpass || typeof conflated === 'string'
+  const validConflationDisabled = !(overpass && overpass.elements && overpass.elements.length > 0) || typeof conflated === 'string'
   const cancelConflationDisabled = !(typeof conflated === 'string')
   const createConflationDisabled = !overpass || typeof conflated === 'string'
 
@@ -273,7 +276,11 @@ export default function Matcher({qid, pid}) {
         <tr>
           <td colSpan={3}/>
           <td>
-            <button disabled={!merged} onClick={clickEmit(ACTION_CHANGE_SET_ADD)}>Ajouter au changeset</button>
+            <button
+              disabled={!(typeof conflated === 'string') || !merged}
+              onClick={clickEmit(ACTION_CHANGE_SET_ADD)}>
+              Ajouter au changeset
+            </button>
           </td>
         </tr>
       </table>
