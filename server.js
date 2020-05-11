@@ -79,6 +79,41 @@ const start = async () => {
   })
 
   server.route({
+    method: 'PATCH',
+    path: '/quests/{qid}/points/{pid}/conflation/{osmId}',
+    options: {
+      cors: true,
+    },
+    handler: async (request, h) => {
+      try {
+        const {params} = request
+        const {qid, pid, osmId} = params
+        await pool.query('insert into conflation (qid, pid, osmid) values ($1, $2, $3)', [qid, pid, osmId])
+        return h.response()
+      } catch (e) {
+        console.error(e)
+      }
+    },
+  })
+  server.route({
+    method: 'DELETE',
+    path: '/quests/{qid}/points/{pid}/conflation',
+    options: {
+      cors: true,
+    },
+    handler: async (request, h) => {
+      try {
+        const {params} = request
+        const {qid, pid, osmId} = params
+        await pool.query('insert into conflation (qid, pid) values ($1, $2)', [qid, pid])
+        return h.response()
+      } catch (e) {
+        console.error(e)
+      }
+    },
+  })
+
+  server.route({
     method: 'POST',
     path: '/quests',
     options: {

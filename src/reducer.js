@@ -6,6 +6,8 @@ export const ACTION_ASYNC = 'async'
 export const ACTION_OVERPASS = 'overpass'
 export const ACTION_RADIUS_CHANGED = 'radiusChanged'
 export const ACTION_POINT_MOVED = 'pointMoved'
+export const ACTION_VALID_CONFLATION = 'actionValidConflation'
+export const ACTION_CANCEL_CONFLATION = 'actionCancelConflation'
 export const ACTION_MORE_OSM = 'moreOSM'
 export const ACTION_MORE_OD = 'moreOD'
 export const ACTION_INPUT_VALUE = 'inputValue'
@@ -22,13 +24,17 @@ const reducer = (state, {type, msg}) => {
     case 'comment':
     case 'dumb':
     case 'loader':
-      return {...state, ...msg}
-
     case ACTION_POINT:
     case ACTION_ASYNC:
     case ACTION_OVERPASS:
     case ACTION_RADIUS_CHANGED:
       return {...state, ...msg}
+
+    case ACTION_VALID_CONFLATION:
+      return {...state, conflated: true}
+
+    case ACTION_CANCEL_CONFLATION:
+      return {...state, conflated: false}
 
     case ACTION_POINT_MOVED:
       return (() => {
@@ -69,7 +75,7 @@ const reducer = (state, {type, msg}) => {
         const {changes, merged, overpass, point} = state
         const element = overpass.elements.length > 0 && overpass.elements[0] || {lat: point.point.y, lon: point.point.x, type : 'node'}
         const newChanges = changes.concat({...element, tags: merged})
-        return {...state, point: undefined, merged: undefined, overpass: undefined, changes: newChanges}
+        return {...state, point: undefined, merged: undefined, overpass: undefined, changes: newChanges, conflated: null}
       })()
     default:
       console.warn('type inconnu', {type})
@@ -80,7 +86,7 @@ const reducer = (state, {type, msg}) => {
 export const ReducerContext = createContext('reducer')
 
 export function initReducer() {
-  return useReducer(reducer, {radius: 20, changes: []})
+  return useReducer(reducer, {radius: 20, changes: [], conflated: null})
 }
 
 export function useContextReducer() {

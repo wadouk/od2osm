@@ -6,6 +6,32 @@ export async function upload(comment, changeSetCount, changes) {
   await closeChangeSet(changeSetId)
 }
 
+export async function getMapBounds(bounds) {
+  const left = bounds.getWest()
+  const bottom = bounds.getSouth()
+  const right = bounds.getEast()
+  const top = bounds.getNorth()
+
+  const b = [left, bottom, right, top].join(',')
+  return new Promise((resolve, reject) => {
+    return osmauth.xhr({
+      options: {
+        header: {
+          'Accept': 'application/json',
+        },
+      },
+      prefix: true,
+      path: `/api/0.6/map?bbox=${b}`,
+      method: 'GET',
+    }, (err, success) => {
+      if (err) {
+        return reject(err)
+      }
+      return resolve(JSON.parse(success))
+    })
+  })
+}
+
 async function createChangeSet(comment, changeSetCount) {
   let content = `<osm>
       <changeset>
@@ -69,7 +95,7 @@ async function uploadChangeSet(changeSetId, changes) {
       return [creates, modifies.concat(curr)]
     }
     return [creates.concat(curr), modifies]
-  }, [[] , []])
+  }, [[], []])
 
   const xmlModifies = modifies.map(({tags, lat, lon, id, version, ...props}) => {
     return `<node id="${id}" version="${version}" changeset="${changeSetId}" lat="${lat}" lon="${lon}">

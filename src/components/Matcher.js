@@ -17,7 +17,10 @@ import {
   ACTION_INPUT_VALUE,
   ACTION_VALUE_OD,
   ACTION_VALUE_OSM,
-  ACTION_CHANGE_SET_ADD, useContextReducer,
+  ACTION_CHANGE_SET_ADD,
+  useContextReducer,
+  ACTION_VALID_CONFLATION,
+  ACTION_CANCEL_CONFLATION,
 } from '../reducer'
 
 function getOsmPoint(overpass) {
@@ -35,16 +38,27 @@ L.Icon.Default.mergeOptions({
 
 export default function Matcher({qid, pid}) {
   const [state, dispatch] = useContextReducer()
+  const {point, radius, overpass, loaderOverpass, merged, conflated} = state
 
   function emit(type, msg) {
     dispatch({type, msg})
   }
 
-  const clickEmit = (action, msg) => (e) => {
+  const clickEmit = (action, msg) => async (e) => {
     emit(action, msg)
+    switch (action) {
+      case ACTION_VALID_CONFLATION:
+        await fetch(`/api/quests/${qid}/points/${pid}/conflation/${overpass.elements[0].id}`, {
+          method: 'PATCH',
+        })
+        break
+      case ACTION_CANCEL_CONFLATION:
+        await fetch(`/api/quests/${qid}/points/${pid}/conflation`, {
+          method: 'DELETE',
+        })
+        break
+    }
   }
-
-  const {point, radius, overpass, loaderOverpass, merged} = state
 
   useEffect(async () => {
     const r = await fetch(`/api/quests/${qid}/points/${pid}`)
@@ -145,8 +159,18 @@ export default function Matcher({qid, pid}) {
   function renderTags(v) {
     return <tr>
       <td className={style.keys}>{v} :</td>
-      <td className={style.value} alt={properties && properties[v]} title={properties && properties[v]} aria-label={properties && properties[v]}>{properties && properties[v]}</td>
-      <td className={style.value} alt={tags && tags[v]} title={tags && tags[v]} aria-label={tags && tags[v]}>{tags && tags[v]}</td>
+      <td className={style.value}
+          alt={properties && properties[v]}
+          title={properties && properties[v]}
+          aria-label={properties && properties[v]}>
+        {properties && properties[v]}
+      </td>
+      <td className={style.value}
+          alt={tags && tags[v]}
+          title={tags && tags[v]}
+          aria-label={tags && tags[v]}>
+        {tags && tags[v]}
+      </td>
       <td>
         <input type="text" value={merged && merged[v]}
                onChange={e => emit(ACTION_INPUT_VALUE, {key: v, value: e.target.value})}/>
@@ -175,7 +199,20 @@ export default function Matcher({qid, pid}) {
                onChange={radiusChanged}/>
         <button onClick={fetchOverpass}>Conflation</button>
       </div>
-      <p>Vous pouvez déplacer le marqueur de l'open data pour vous rapprocher du point venant d'OSM ou augmenter le rayon de recherche.</p>
+      <p>Vous pouvez déplacer le marqueur de l'open data pour vous rapprocher du point venant d'OSM ou augmenter le
+        rectangle de recherche.</p>
+      <div>
+        <button
+          onClick={clickEmit(ACTION_VALID_CONFLATION)}
+          disabled={!overpass || conflated === true}>
+          Valider le rapprochement
+        </button>
+        <button
+          onClick={clickEmit(ACTION_CANCEL_CONFLATION)}
+          disabled={!overpass || !(!overpass || conflated === true)}>
+          Annuler le rapprochement
+        </button>
+      </div>
       {renderMap()}
     </div>
     <div className={style.secondCol}>
@@ -205,8 +242,9 @@ export default function Matcher({qid, pid}) {
       </table>
       <ul>
         {merged ? (overpass && overpass.elements.length > 0 ?
-          <li>Un élément dans OSM a été trouvé, vous pouvez le completer éventuellement avec les données de l'open data'</li>:
-          <li>Aucun point pré-existant n'a été trouvé, vous allez créer ce point</li>
+            <li>Un élément dans OSM a été trouvé, vous pouvez le completer éventuellement avec les données de l'open
+              data'</li> :
+            <li>Aucun point pré-existant n'a été trouvé, vous allez créer ce point</li>
         ) : null}
       </ul>
     </div>
