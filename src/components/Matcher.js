@@ -278,7 +278,7 @@ export default function Matcher({qid, pid}) {
           <td>
             <button
               disabled={!(typeof conflated === 'string') || !merged}
-              onClick={clickEmit(ACTION_CHANGE_SET_ADD)}>
+              onClick={clickEmit(ACTION_CHANGE_SET_ADD, {qid})}>
               Ajouter au changeset
             </button>
           </td>

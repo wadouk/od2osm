@@ -90,12 +90,15 @@ const reducer = (state, {type, msg}) => {
       return (() => {
         const {changes, merged, overpass, point, conflated} = state
         const {id} = point
+        const {qid} = msg
         const element = (conflated === 'valid' && overpass.elements.length > 0 && overpass.elements[0]) || (conflated === 'create' && {
           lat: point.point.y,
           lon: point.point.x,
           type: 'node',
+          id: -(changes.length + 1),
+          version: 0
         })
-        const newChanges = changes.filter(({pid}) => pid !== id).concat({...element, tags: merged, pid: id})
+        const newChanges = changes.filter(({pid}) => pid !== id).concat({...element, tags: merged, pid: id, qid, action: conflated})
         return {
           ...state,
           point: undefined,

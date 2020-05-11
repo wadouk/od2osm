@@ -15,7 +15,22 @@ export default function Changes() {
   async function clickUpload() {
     try {
       dispatch({type: 'loader', msg: {loader: true}})
-      await upload(comment, changeSetCount, changes)
+      const result = await upload(comment, changeSetCount, changes)
+
+      const ids = changes.reduce((all, {pid, qid, id}) => {
+        return {...all, [id]: {pid, qid}}
+      }, {})
+
+      const ns = result.getElementsByTagName('diffResult')
+      for (let i = 0; i < ns.length; ++i) {
+        const diff = ns[i]
+        const oldId = diff.getAttribute('old_id')
+        const newId = diff.getAttribute('new_id')
+        const {pid, qid} = ids[oldId]
+        await fetch(`/api/quests/${qid}/points/${pid}/conflation/${newId}`, {
+          method: 'PATCH',
+        })
+      }
       dispatch({type: 'loader', msg: {loader: false}})
     } catch (xhr) {
       dispatch({type: 'loader', msg: {loader: false}})
