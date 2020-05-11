@@ -8,6 +8,7 @@ export const ACTION_RADIUS_CHANGED = 'radiusChanged'
 export const ACTION_POINT_MOVED = 'pointMoved'
 export const ACTION_VALID_CONFLATION = 'actionValidConflation'
 export const ACTION_CANCEL_CONFLATION = 'actionCancelConflation'
+export const ACTION_CREATE_CONFLATION = 'actionCreateConflation'
 export const ACTION_MORE_OSM = 'moreOSM'
 export const ACTION_MORE_OD = 'moreOD'
 export const ACTION_INPUT_VALUE = 'inputValue'
@@ -24,17 +25,32 @@ const reducer = (state, {type, msg}) => {
     case 'comment':
     case 'dumb':
     case 'loader':
-    case ACTION_POINT:
     case ACTION_ASYNC:
     case ACTION_OVERPASS:
     case ACTION_RADIUS_CHANGED:
       return {...state, ...msg}
 
+
+    case ACTION_POINT:
+      return (() => {
+        const {conflated, ...newState} = state
+        const newMsg = conflated === 'create' ? {} : msg
+        return {...newState, ...newMsg, conflated}
+      })()
+
     case ACTION_VALID_CONFLATION:
-      return {...state, conflated: true}
+      return {...state, conflated: 'valid'}
 
     case ACTION_CANCEL_CONFLATION:
-      return {...state, conflated: false}
+      return (() => {
+        const {conflated, merged, ...newState} = state
+        return {...newState}
+      })()
+
+    case ACTION_CREATE_CONFLATION:
+      const {overpass} = state
+      const newOverpass = {...overpass, elements : []}
+      return {...state, overpass: newOverpass, conflated: 'create'}
 
     case ACTION_POINT_MOVED:
       return (() => {
@@ -48,15 +64,15 @@ const reducer = (state, {type, msg}) => {
       return (() => {
         const {point} = state
         const {properties} = point
-        const newMerged = {...properties, ...(msg)}
+        const newMerged = {...properties, ...msg}
         return {...state, merged: newMerged}
       })()
 
     case ACTION_MORE_OD:
       return (() => {
-        const {point} = state
+        const {point, conflated} = state
         const {properties} = point
-        const newMerged = {...(msg), ...properties}
+        const newMerged = conflated === 'valid' ? {...msg, ...properties} : {...properties}
         return {...state, merged: newMerged}
       })()
 
@@ -73,9 +89,20 @@ const reducer = (state, {type, msg}) => {
     case ACTION_CHANGE_SET_ADD:
       return (() => {
         const {changes, merged, overpass, point} = state
-        const element = overpass.elements.length > 0 && overpass.elements[0] || {lat: point.point.y, lon: point.point.x, type : 'node'}
+        const element = overpass.elements.length > 0 && overpass.elements[0] || {
+          lat: point.point.y,
+          lon: point.point.x,
+          type: 'node',
+        }
         const newChanges = changes.concat({...element, tags: merged})
-        return {...state, point: undefined, merged: undefined, overpass: undefined, changes: newChanges, conflated: null}
+        return {
+          ...state,
+          point: undefined,
+          merged: undefined,
+          overpass: undefined,
+          changes: newChanges,
+          conflated: null,
+        }
       })()
     default:
       console.warn('type inconnu', {type})

@@ -1,3 +1,4 @@
+import {h} from 'preact'
 import {useEffect} from 'preact/hooks'
 import L, {LatLng} from 'leaflet'
 import {Map, Marker, Popup, Rectangle, TileLayer} from 'react-leaflet'
@@ -20,7 +21,7 @@ import {
   ACTION_CHANGE_SET_ADD,
   useContextReducer,
   ACTION_VALID_CONFLATION,
-  ACTION_CANCEL_CONFLATION,
+  ACTION_CANCEL_CONFLATION, ACTION_CREATE_CONFLATION,
 } from '../reducer'
 
 function getOsmPoint(overpass) {
@@ -48,9 +49,11 @@ export default function Matcher({qid, pid}) {
     emit(action, msg)
     switch (action) {
       case ACTION_VALID_CONFLATION:
-        await fetch(`/api/quests/${qid}/points/${pid}/conflation/${overpass.elements[0].id}`, {
-          method: 'PATCH',
-        })
+        if (overpass && overpass.elements && overpass.elements.length > 0) {
+          await fetch(`/api/quests/${qid}/points/${pid}/conflation/${overpass.elements[0].id}`, {
+            method: 'PATCH',
+          })
+        }
         break
       case ACTION_CANCEL_CONFLATION:
         await fetch(`/api/quests/${qid}/points/${pid}/conflation`, {
@@ -156,36 +159,65 @@ export default function Matcher({qid, pid}) {
     emit(ACTION_RADIUS_CHANGED, {radius: e.target.value})
   }
 
+
+
   function renderTags(v) {
-    return <tr>
+    function pickItDisabled(t) {
+      return (!merged || (merged && t && !t.hasOwnProperty(v) || (merged && t && merged[v] === t[v]) || (merged && !t)))
+    }
+
+    function showValue(t) {
+      return t && t[v] || ''
+    }
+
+    return (<tr>
       <td className={style.keys}>{v} :</td>
       <td className={style.value}
-          alt={properties && properties[v]}
-          title={properties && properties[v]}
-          aria-label={properties && properties[v]}>
-        {properties && properties[v]}
+          alt={showValue(properties)}
+          title={showValue(properties)}
+          aria-label={showValue(properties)}>
+        {showValue(properties)}
       </td>
       <td className={style.value}
-          alt={tags && tags[v]}
-          title={tags && tags[v]}
-          aria-label={tags && tags[v]}>
-        {tags && tags[v]}
+          alt={showValue(tags)}
+          title={showValue(tags)}
+          aria-label={showValue(tags)}>
+        {showValue(tags)}
       </td>
-      <td>
-        <input type="text" value={merged && merged[v]}
+      <td className={style.actions}>
+        <input type="text"
+               value={showValue(merged)}
                onChange={e => emit(ACTION_INPUT_VALUE, {key: v, value: e.target.value})}/>
         <button
-          disabled={!merged || (merged && properties && !properties.hasOwnProperty(v) || (merged && properties && merged[v] === properties[v]) || (merged && !properties))}
+          disabled={pickItDisabled(properties)}
           onClick={e => emit(ACTION_VALUE_OD, {key: v, value: properties[v]})}>
           OD
         </button>
         <button
-          disabled={!merged || (merged && tags && !tags.hasOwnProperty(v) || (merged && tags && merged[v] === tags[v]) || (merged && !tags))}
+          disabled={pickItDisabled(tags)}
           onClick={e => emit(ACTION_VALUE_OSM, {key: v, value: tags[v]})}>
           OSM
         </button>
       </td>
-    </tr>
+    </tr>)
+  }
+
+  console.log(state)
+
+  const validConflationDisabled = !overpass || typeof conflated === 'string'
+  const cancelConflationDisabled = !(typeof conflated === 'string')
+  const createConflationDisabled = !overpass || typeof conflated === 'string'
+
+  function wordingAction() {
+    if (merged) {
+      if (conflated === 'valid' && overpass && overpass.elements.length > 0) {
+        return <li>Vous avez choisi d'éventuellement completer le point OSM existant avec les données de l'open
+          data</li>
+      } else if (conflated === 'create') {
+        return <li>Vous avez choisi de créer le point avec les données en OpenData</li>
+      }
+    }
+    return null
   }
 
   return <div className={style.point}>
@@ -204,13 +236,18 @@ export default function Matcher({qid, pid}) {
       <div>
         <button
           onClick={clickEmit(ACTION_VALID_CONFLATION)}
-          disabled={!overpass || conflated === true}>
-          Valider le rapprochement
+          disabled={validConflationDisabled}>
+          Valider
         </button>
         <button
           onClick={clickEmit(ACTION_CANCEL_CONFLATION)}
-          disabled={!overpass || !(!overpass || conflated === true)}>
-          Annuler le rapprochement
+          disabled={cancelConflationDisabled}>
+          Annuler
+        </button>
+        <button
+          onClick={clickEmit(ACTION_CREATE_CONFLATION)}
+          disabled={createConflationDisabled}>
+          Créer
         </button>
       </div>
       {renderMap()}
@@ -222,11 +259,11 @@ export default function Matcher({qid, pid}) {
           <th>OpenData</th>
           <th>OSM {loaderOverpass ? <Loader/> : null}</th>
           <td>
-            <button disabled={!properties}
+            <button disabled={!(conflated === 'valid' || conflated === 'create') || !properties}
                     onClick={clickEmit(ACTION_MORE_OD, tags)}>
               Plutôt OD
             </button>
-            <button disabled={!tags}
+            <button disabled={!(conflated === 'valid') || !tags}
                     onClick={clickEmit(ACTION_MORE_OSM, tags)}>
               Plutôt OSM
             </button>
@@ -241,13 +278,8 @@ export default function Matcher({qid, pid}) {
         </tr>
       </table>
       <ul>
-        {merged ? (overpass && overpass.elements.length > 0 ?
-            <li>Un élément dans OSM a été trouvé, vous pouvez le completer éventuellement avec les données de l'open
-              data'</li> :
-            <li>Aucun point pré-existant n'a été trouvé, vous allez créer ce point</li>
-        ) : null}
+        {wordingAction()}
       </ul>
     </div>
   </div>
-
 }

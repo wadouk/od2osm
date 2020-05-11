@@ -19,6 +19,11 @@
     font-weight: bold;
     text-align: right;
     padding-right: 10px;
+    white-space: nowrap;
+}
+
+.actions {
+    white-space: nowrap;
 }
 
 .value {
