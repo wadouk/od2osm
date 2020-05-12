@@ -3,8 +3,7 @@
 const Hapi = require('@hapi/hapi')
 const Inert = require('@hapi/inert')
 
-const {Client, types, Pool} = require('pg')
-const client = new Client()
+const {types, Pool} = require('pg')
 
 const pool = new Pool()
 
@@ -114,7 +113,7 @@ const start = async () => {
       try {
         const {payload} = request
         payload.map(async ({osmId, qid, pid}) => {
-          await pool.query('delete from conflation where qid=$1 and pid=$2', [qid, pid])
+          await pool.query("delete from conflation where qid=$1 and pid=$2 and action <> 'done'", [qid, pid])
           await pool.query('insert into conflation (qid, pid, action, osmid) values ($1, $2, $3, $4)', [qid, pid, 'done', osmId])
         })
 
@@ -134,7 +133,7 @@ const start = async () => {
       try {
         const {params} = request
         const {qid, pid} = params
-        await pool.query('delete from conflation where qid=$1 and pid=$2', [qid, pid])
+        await pool.query("delete from conflation where qid=$1 and pid=$2 and action <> 'done'", [qid, pid])
         await pool.query('insert into conflation (qid, pid, action) values ($1, $2, $3)', [qid, pid, 'create'])
         return h.response()
       } catch (e) {
@@ -152,8 +151,8 @@ const start = async () => {
       try {
         const {params} = request
         const {qid, pid} = params
-        await pool.query('delete from conflation where qid=$1 and pid=$2', [qid, pid])
-        await pool.query('insert into conflation (qid, pid) values ($1, $2)', [qid, pid])
+        await pool.query("delete from conflation where qid=$1 and pid=$2 and action <> 'done'", [qid, pid])
+        await pool.query("insert into conflation (qid, pid) values ($1, $2)", [qid, pid])
         return h.response()
       } catch (e) {
         console.error(e)
