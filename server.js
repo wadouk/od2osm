@@ -87,6 +87,7 @@ const start = async () => {
       try {
         const {params} = request
         const {qid, pid, osmId} = params
+        await pool.query("delete from conflation where qid=$1 and pid=$2 and (action = 'valid' or action is null)", [qid, pid])
         await pool.query('insert into conflation (qid, pid, action, osmid) values ($1, $2, $3, $4)', [qid, pid, 'valid', osmId])
         return h.response()
       } catch (e) {
@@ -113,7 +114,7 @@ const start = async () => {
       try {
         const {payload} = request
         payload.map(async ({osmId, qid, pid}) => {
-          await pool.query("delete from conflation where qid=$1 and pid=$2 and action <> 'done'", [qid, pid])
+          await pool.query("delete from conflation where qid=$1 and pid=$2 and (action in ('valid') or action is null)", [qid, pid])
           await pool.query('insert into conflation (qid, pid, action, osmid) values ($1, $2, $3, $4)', [qid, pid, 'done', osmId])
         })
 
@@ -133,7 +134,7 @@ const start = async () => {
       try {
         const {params} = request
         const {qid, pid} = params
-        await pool.query("delete from conflation where qid=$1 and pid=$2 and action <> 'done'", [qid, pid])
+        await pool.query("delete from conflation where qid=$1 and pid=$2 and (action in ('valid', 'create') or action is null)", [qid, pid])
         await pool.query('insert into conflation (qid, pid, action) values ($1, $2, $3)', [qid, pid, 'create'])
         return h.response()
       } catch (e) {
@@ -151,7 +152,7 @@ const start = async () => {
       try {
         const {params} = request
         const {qid, pid} = params
-        await pool.query("delete from conflation where qid=$1 and pid=$2 and action <> 'done'", [qid, pid])
+        await pool.query("delete from conflation where qid=$1 and pid=$2 and (action is null)", [qid, pid])
         await pool.query("insert into conflation (qid, pid) values ($1, $2)", [qid, pid])
         return h.response()
       } catch (e) {
