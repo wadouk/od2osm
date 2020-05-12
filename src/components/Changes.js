@@ -8,6 +8,7 @@ export default function Changes() {
 
   function renderTags(t) {
     return t ? Object.entries(t)
+      .filter(([k]) => ['qid', 'pid', 'action'].indexOf(k) === -1)
       .sort(([k1], [k2]) => k1 > k2 ? 1 : -1)
       .map(([k, v]) => <div><b>{k}</b> : <i>{v}</i></div>) : null
   }

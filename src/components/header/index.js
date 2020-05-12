@@ -8,7 +8,7 @@ export default function Header() {
   const [state, dispatch] = useContextReducer()
   const {changes} = state
 
-  const labelChanges = changes.length === 0 ? 'Aucun changement' : `${changes.length} changement${changes.length ===1 ? '' : 's'}`
+  const labelChanges = changes.length === 0 ? 'Aucun changement' : `${changes.length} changement${changes.length === 1 ? '' : 's'}`
 
 	return <header className={style.header}>
 		<h1><Link activeClassName={style.active} href="/">OpenData to OpenStreetMap</Link></h1>

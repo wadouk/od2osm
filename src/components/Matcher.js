@@ -235,7 +235,6 @@ export default function Matcher({qid, pid}) {
                onChange={radiusChanged}/>
                mètres
       </div>
-      <p></p>
       <ul>
         <li>le rectangle représente la zone de recherche</li>
         <li>le marqueur au centre du carré est aux coordonnés de l'open data</li>
@@ -244,6 +243,12 @@ export default function Matcher({qid, pid}) {
         <li>Vous pouvez déplacer le marqueur OpenData</li>
         <li>Ou vous pouvez changer la taille de la zone de recherche (em mètres)</li>
       </ul>
+      <h3>Le point à trouver par ici :</h3>
+      <p>{properties && Object.entries(properties)
+        .filter(([k, v]) => ['shop', 'amenity', 'name'].indexOf(k) !== -1)
+        .map(([k, v]) => k + '=' + v)
+        .join(', ') || ''
+      }</p>
       <div className={style.actions}>
         <button onClick={fetchOverpass}>Conflation</button>
         {loaderOverpass ? <Loader/> : null}
