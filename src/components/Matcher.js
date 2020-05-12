@@ -22,6 +22,7 @@ import {
   ACTION_VALID_CONFLATION,
   ACTION_CANCEL_CONFLATION, ACTION_CREATE_CONFLATION,
 } from '../reducer'
+import {route} from 'preact-router'
 
 function getOsmPoint(overpass) {
   const {elements} = overpass || {}
@@ -61,6 +62,9 @@ export default function Matcher({qid, pid}) {
         await fetch(`/api/quests/${qid}/points/${pid}/conflation`, {
           method: 'DELETE',
         })
+        break
+      case ACTION_CHANGE_SET_ADD:
+        route(`/quests/${qid}/points`)
         break
     }
   }
@@ -223,12 +227,13 @@ export default function Matcher({qid, pid}) {
     return <div className={style.firstCol}>
       <h2>Rapprochement</h2>
       <div className={style.renderElement}>
-        <label htmlFor="radius">Distance de recherche d'un point similaire</label>
+        <label htmlFor="radius">Distance de recherche d'un point similaire :</label>
         <input id="radius" type="number"
                step={20}
                size={5}
                value={radius}
                onChange={radiusChanged}/>
+               mètres
       </div>
       <p></p>
       <ul>

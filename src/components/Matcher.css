@@ -51,7 +51,12 @@
 }
 
 .renderElement {
-    display: flex;
+}
+
+.renderElement input[type=number] {
+    width: 4em;
+    margin-left: 1em;
+    margin-right: 0.3em;
 }
 
 .actions {
