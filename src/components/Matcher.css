@@ -1,18 +1,25 @@
 .leafletContainer {
     height: 400px;
     width: 400px;
+    margin: 20px auto 0;
 }
 
 .point {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
 }
 
 .firstCol {
     max-width: 30em;
+    margin: 0 auto;
 }
 .secondCol {
-    flex: 1;
+    margin: 0 auto;
+}
+
+.point h2 {
+    text-align: center;
+    margin-bottom: 50px;
 }
 
 .keys {
@@ -45,4 +52,13 @@
 
 .renderElement {
     display: flex;
+}
+
+.actions {
+    display: flex;
+    align-content: space-between;
+}
+
+.secondGroupActions {
+    margin-left: auto;
 }

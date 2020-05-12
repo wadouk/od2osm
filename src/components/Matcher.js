@@ -1,8 +1,7 @@
-import {h} from 'preact'
 import {useEffect} from 'preact/hooks'
 import L, {LatLng} from 'leaflet'
 import {Map, Marker, Popup, Rectangle, TileLayer} from 'react-leaflet'
-import style from '../routes/style.css'
+import style from './Matcher.css'
 import Loader from './Loader'
 
 import leafletCss from 'leaflet/dist/leaflet.css'
@@ -163,7 +162,6 @@ export default function Matcher({qid, pid}) {
   }
 
 
-
   function renderTags(v) {
     function pickItDisabled(t) {
       return (!merged || (merged && t && !t.hasOwnProperty(v) || (merged && t && merged[v] === t[v]) || (merged && !t)))
@@ -205,8 +203,6 @@ export default function Matcher({qid, pid}) {
     </tr>)
   }
 
-  console.log(state)
-
   const validConflationDisabled = !(overpass && overpass.elements && overpass.elements.length > 0) || typeof conflated === 'string'
   const cancelConflationDisabled = !(typeof conflated === 'string')
   const createConflationDisabled = !overpass || typeof conflated === 'string'
@@ -223,29 +219,34 @@ export default function Matcher({qid, pid}) {
     return null
   }
 
-  return <div className={style.point}>
-    <div className={style.firstCol}>
+  function firstStep() {
+    return <div className={style.firstCol}>
       <h2>Rapprochement</h2>
       <div className={style.renderElement}>
-        <label htmlFor="radius">Radius</label>
+        <label htmlFor="radius">Distance de recherche d'un point similaire</label>
         <input id="radius" type="number"
                step={20}
+               size={5}
                value={radius}
                onChange={radiusChanged}/>
-        <button onClick={fetchOverpass}>Conflation</button>
       </div>
-      <p>Vous pouvez déplacer le marqueur de l'open data pour vous rapprocher du point venant d'OSM ou augmenter le
-        rectangle de recherche.</p>
-      <div>
+      <p></p>
+      <ul>
+        <li>le rectangle représente la zone de recherche</li>
+        <li>le marqueur au centre du carré est aux coordonnés de l'open data</li>
+        <li>l'autre marqueur éventuel est le point similaire dans OSM</li>
+        <li>Des info bulles au clic permettent de les différencier</li>
+        <li>Vous pouvez déplacer le marqueur OpenData</li>
+        <li>Ou vous pouvez changer la taille de la zone de recherche (em mètres)</li>
+      </ul>
+      <div className={style.actions}>
+        <button onClick={fetchOverpass}>Conflation</button>
+        {loaderOverpass ? <Loader/> : null}
         <button
+          className={style.secondGroupActions}
           onClick={clickEmit(ACTION_VALID_CONFLATION)}
           disabled={validConflationDisabled}>
           Valider
-        </button>
-        <button
-          onClick={clickEmit(ACTION_CANCEL_CONFLATION)}
-          disabled={cancelConflationDisabled}>
-          Annuler
         </button>
         <button
           onClick={clickEmit(ACTION_CREATE_CONFLATION)}
@@ -255,12 +256,16 @@ export default function Matcher({qid, pid}) {
       </div>
       {renderMap()}
     </div>
-    <div className={style.secondCol}>
+  }
+
+  function secondStep() {
+    return <div className={style.secondCol}>
+      <h2>Fusion des tags</h2>
       <table>
         <tr>
           <th>Attributs</th>
           <th>OpenData</th>
-          <th>OSM {loaderOverpass ? <Loader/> : null}</th>
+          <th>OSM</th>
           <td>
             <button disabled={!(conflated === 'valid' || conflated === 'create') || !properties}
                     onClick={clickEmit(ACTION_MORE_OD, tags)}>
@@ -274,7 +279,13 @@ export default function Matcher({qid, pid}) {
         </tr>
         {allKeyTags.map(renderTags)}
         <tr>
-          <td colSpan={3}/>
+          <td colSpan={3}>
+            <button
+              onClick={clickEmit(ACTION_CANCEL_CONFLATION)}
+              disabled={cancelConflationDisabled}>
+              Annuler le rapprochement
+            </button>
+          </td>
           <td>
             <button
               disabled={!(typeof conflated === 'string') || !merged}
@@ -288,5 +299,9 @@ export default function Matcher({qid, pid}) {
         {wordingAction()}
       </ul>
     </div>
+  }
+
+  return <div className={style.point}>
+    {conflated ? secondStep() : firstStep()}
   </div>
 }
