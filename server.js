@@ -51,7 +51,7 @@ const start = async () => {
       try {
         const {params} = request
         const {qid} = params
-        const res = await pool.query("select id, properties->'name' as name from points where qid = $1", [qid])
+        const res = await pool.query(`select * from conflatedpoints where qid = $1 `, [qid])
         return res.rows
       } catch (e) {
         console.error(e)

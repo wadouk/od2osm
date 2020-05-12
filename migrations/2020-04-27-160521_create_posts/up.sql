@@ -50,3 +50,21 @@ alter table conflation alter column osmid drop not null;
 alter table conflation
     add action varchar;
 
+alter table conflation alter column qid type integer using qid::integer;
+
+create or replace view conflatedpoints as
+select p.qid,
+       p.id                 as pid,
+       properties -> 'name' as name,
+       c.id                 as cid,
+       coalesce(c.action, 'todo') as action,
+       c.inserted,
+       c.osmid
+from points p
+         left outer join conflation c on (c.qid = p.qid
+    and c.pid = p.id)
+         left outer join
+     (select max(id) id, max(inserted) inserted
+      from conflation
+      group by qid, pid) t
+     on t.id = c.id

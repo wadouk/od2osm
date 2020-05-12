@@ -28,6 +28,8 @@ const reducer = (state, {type, msg}) => {
     case ACTION_ASYNC:
     case ACTION_OVERPASS:
     case ACTION_RADIUS_CHANGED:
+    case 'points':
+    case 'filterAction':
       return {...state, ...msg}
 
 
@@ -117,7 +119,7 @@ const reducer = (state, {type, msg}) => {
 export const ReducerContext = createContext('reducer')
 
 export function initReducer() {
-  return useReducer(reducer, {radius: 20, changes: [], conflated: null})
+  return useReducer(reducer, {radius: 20, changes: [], conflated: null, points : [], filterAction: 'todo'})
 }
 
 export function useContextReducer() {
