@@ -22,15 +22,22 @@ export default function Changes() {
       }, {})
 
       const ns = result.getElementsByTagName('diffResult')
+      const toSend = []
       for (let i = 0; i < ns.length; ++i) {
-        const diff = ns[i]
-        const oldId = diff.getAttribute('old_id')
-        const newId = diff.getAttribute('new_id')
+        const oldId = ns[i].getAttribute('old_id')
+        const newId = ns[i].getAttribute('new_id')
         const {pid, qid} = ids[oldId]
-        await fetch(`/api/quests/${qid}/points/${pid}/conflation/${newId}`, {
-          method: 'PATCH',
-        })
+        toSend.push({osmId: newId, pid, qid})
       }
+
+      await fetch(`/api/points`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(toSend)
+      })
+
       dispatch({type: 'loader', msg: {loader: false}})
     } catch (xhr) {
       dispatch({type: 'loader', msg: {loader: false}})
