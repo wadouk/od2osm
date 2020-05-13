@@ -5,6 +5,7 @@ import style from './Matcher.css'
 import Loader from './Loader'
 import {getMapBounds} from '../osmQueries'
 
+// eslint-disable-next-line no-unused-vars
 import leafletCss from 'leaflet/dist/leaflet.css'
 
 import {
@@ -46,7 +47,7 @@ export default function Matcher({qid, pid}) {
     dispatch({type, msg})
   }
 
-  const clickEmit = (action, msg) => async (e) => {
+  const clickEmit = (action, msg) => async () => {
     emit(action, msg)
     switch (action) {
       case ACTION_VALID_CONFLATION:
@@ -84,7 +85,7 @@ export default function Matcher({qid, pid}) {
     const bbox = new LatLng(point.point.y, point.point.x).toBounds(radius)
     const bboxOverpass = [bbox.getSouth(), bbox.getWest(), bbox.getNorth(), bbox.getEast()].map(v => v.toFixed(6)).join(', ')
     const q = Object.entries(properties)
-      .filter(([k, v]) => ['shop', 'amenity'].indexOf(k) !== -1)
+      .filter(([k]) => ['shop', 'amenity'].indexOf(k) !== -1)
       .map(([k, v]) => v.split(";")
         .map(u => `node ["${k}"="${u}"](${bboxOverpass}); `).join("\n"),
       )[0]
@@ -104,7 +105,7 @@ export default function Matcher({qid, pid}) {
       },
       mode: "cors",
       credentials: "omit",
-      body: body,
+      body,
     }
 
     const r = await fetch("http://overpass-api.de/api/interpreter", options)
@@ -167,7 +168,7 @@ export default function Matcher({qid, pid}) {
 
   function renderMap() {
     if (!point) {
-      return <Loader/>
+      return <Loader />
     }
     const bbox = new LatLng(point.point.y, point.point.x).toBounds(radius)
     return <Map center={{lon: point.point.x, lat: point.point.y}} bounds={bbox} className={style.leafletContainer}>
@@ -180,7 +181,7 @@ export default function Matcher({qid, pid}) {
               onMoveEnd={markerOpendataMoved}>
         <Popup>Opendata</Popup>
       </Marker>
-      <Rectangle bounds={bbox}/>
+      <Rectangle bounds={bbox} />
     </Map>
   }
 
@@ -199,7 +200,7 @@ export default function Matcher({qid, pid}) {
 
   function renderTags(v) {
     function pickItDisabled(t) {
-      return (!merged || (merged && t && !t.hasOwnProperty(v) || (merged && t && merged[v] === t[v]) || (merged && !t)))
+      return (!merged || (merged && t && !t[v] || (merged && t && merged[v] === t[v]) || (merged && !t)))
     }
 
     function showValue(t) {
@@ -223,15 +224,15 @@ export default function Matcher({qid, pid}) {
       <td className={style.actions}>
         <input type="text"
                value={showValue(merged)}
-               onChange={e => emit(ACTION_INPUT_VALUE, {key: v, value: e.target.value})}/>
+               onChange={e => emit(ACTION_INPUT_VALUE, {key: v, value: e.target.value})} />
         <button
           disabled={pickItDisabled(properties)}
-          onClick={e => emit(ACTION_VALUE_OD, {key: v, value: properties[v]})}>
+          onClick={() => emit(ACTION_VALUE_OD, {key: v, value: properties[v]})}>
           OD
         </button>
         <button
           disabled={pickItDisabled(tags)}
-          onClick={e => emit(ACTION_VALUE_OSM, {key: v, value: tags[v]})}>
+          onClick={() => emit(ACTION_VALUE_OSM, {key: v, value: tags[v]})}>
           OSM
         </button>
       </td>
@@ -263,7 +264,7 @@ export default function Matcher({qid, pid}) {
                step={20}
                size={5}
                value={radius}
-               onChange={radiusChanged}/>
+               onChange={radiusChanged} />
         mètres
       </div>
       <ul>
@@ -276,13 +277,13 @@ export default function Matcher({qid, pid}) {
       </ul>
       <h3>Le point à trouver par ici :</h3>
       <p>{properties && Object.entries(properties)
-        .filter(([k, v]) => ['shop', 'amenity', 'name'].indexOf(k) !== -1)
-        .map(([k, v]) => k + '=' + v)
+        .filter(([k]) => ['shop', 'amenity', 'name'].indexOf(k) !== -1)
+        .map(([k, v]) => `${k  }=${  v}`)
         .join(', ') || ''
       }</p>
       <div className={style.actions}>
         <button onClick={fetchOsmData}>Conflation</button>
-        <Loader loaderState={loaderOverpass}/>
+        <Loader loaderState={loaderOverpass} />
         <span>{overpass && overpass.elements ? `Nb résultat OSM: ${overpass.elements.length}` : ''}</span>
         <button
           className={style.secondGroupActions}

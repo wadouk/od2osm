@@ -18,7 +18,7 @@ export async function getMapBounds(bounds) {
     return osmauth.xhr({
       options: {
         header: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
       },
       prefix: true,
@@ -52,7 +52,7 @@ async function createChangeSet(comment, changeSetCount) {
       prefix: true,
       path: '/api/0.6/changeset/create',
       method: 'PUT',
-      content: content,
+      content,
     }, (err, success) => {
       if (err) {
         return reject(err)
@@ -90,7 +90,7 @@ function toXmlTags(tags) {
 }
 async function uploadChangeSet(changeSetId, changes) {
   function toXmlNode(n) {
-    return n.map(({tags, lat, lon, id, version, ...props}) => {
+    return n.map(({tags, lat, lon, id, version}) => {
       return `<node id="${id}" version="${version}" changeset="${changeSetId}" lat="${lat}" lon="${lon}"> ${toXmlTags(tags)} </node>`
     }).join('\n')
   }

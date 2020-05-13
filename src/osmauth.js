@@ -1,5 +1,5 @@
-var ohauth = require('ohauth');
-var resolveUrl = require('resolve-url');
+let ohauth = require('ohauth');
+let resolveUrl = require('resolve-url');
 
 // # osm-auth
 //
@@ -8,7 +8,7 @@ var resolveUrl = require('resolve-url');
 // does not support custom headers, which this uses everywhere.
 const osmAuth = function(o) {
 
-  var oauth = {};
+  let oauth = {};
 
   // authenticated users will also have a request token secret, but it's
   // not used in transactions with the server
@@ -30,8 +30,8 @@ const osmAuth = function(o) {
     oauth.logout();
 
     // ## Getting a request token
-    var params = timenonce(getAuth(o)),
-      url = o.url + '/oauth/request_token';
+    let params = timenonce(getAuth(o)),
+      url = `${o.url  }/oauth/request_token`;
 
     params.oauth_signature = ohauth.signature(
       o.oauth_secret, '',
@@ -43,7 +43,7 @@ const osmAuth = function(o) {
         settings = [
           ['width', w], ['height', h],
           ['left', screen.width / 2 - w / 2],
-          ['top', screen.height / 2 - h / 2]].map(function(x) {
+          ['top', screen.height / 2 - h / 2]].map((x) => {
           return x.join('=');
         }).join(','),
         popup = window.open('about:blank', 'oauth_window', settings);
@@ -57,12 +57,12 @@ const osmAuth = function(o) {
     function reqTokenDone(err, xhr) {
       o.done();
       if (err) return callback(err);
-      var resp = ohauth.stringQs(xhr.response);
+      let resp = ohauth.stringQs(xhr.response);
       token('oauth_request_token_secret', resp.oauth_token_secret);
-      var authorize_url = o.url + '/oauth/authorize?' + ohauth.qsString({
+      let authorize_url = `${o.url  }/oauth/authorize?${  ohauth.qsString({
         oauth_token: resp.oauth_token,
         oauth_callback: resolveUrl(o.landing)
-      });
+      })}`;
 
       if (o.singlepage) {
         location.href = authorize_url;
@@ -83,7 +83,7 @@ const osmAuth = function(o) {
     // At this point we have an `oauth_token`, brought in from a function
     // call on a landing page popup.
     function get_access_token(oauth_token) {
-      var url = o.url + '/oauth/access_token',
+      let url = `${o.url  }/oauth/access_token`,
         params = timenonce(getAuth(o)),
         request_token_secret = token('oauth_request_token_secret');
       params.oauth_token = oauth_token;
@@ -103,7 +103,7 @@ const osmAuth = function(o) {
     function accessTokenDone(err, xhr) {
       o.done();
       if (err) return callback(err);
-      var access_token = ohauth.stringQs(xhr.response);
+      let access_token = ohauth.stringQs(xhr.response);
       token('oauth_token', access_token.oauth_token);
       token('oauth_token_secret', access_token.oauth_token_secret);
       callback(null, oauth);
@@ -115,7 +115,7 @@ const osmAuth = function(o) {
     // At this point we have an `oauth_token`, brought in from a function
     // call on a landing page popup.
     function get_access_token(oauth_token) {
-      var url = o.url + '/oauth/access_token',
+      let url = `${o.url  }/oauth/access_token`,
         params = timenonce(getAuth(o)),
         request_token_secret = token('oauth_request_token_secret');
       params.oauth_token = oauth_token;
@@ -134,7 +134,7 @@ const osmAuth = function(o) {
     function accessTokenDone(err, xhr) {
       o.done();
       if (err) return callback(err);
-      var access_token = ohauth.stringQs(xhr.response);
+      let access_token = ohauth.stringQs(xhr.response);
       token('oauth_token', access_token.oauth_token);
       token('oauth_token_secret', access_token.oauth_token_secret);
       callback(null, oauth);
@@ -151,16 +151,16 @@ const osmAuth = function(o) {
     if (!oauth.authenticated()) {
       if (o.auto) {
         return oauth.authenticate(run);
-      } else {
+      } 
         callback('not authenticated', null);
         return;
-      }
-    } else {
+      
+    } 
       return run();
-    }
+    
 
     function run() {
-      var params = timenonce(getAuth(o)),
+      let params = timenonce(getAuth(o)),
         oauth_token_secret = token('oauth_token_secret'),
         url = (options.prefix !== false) ? o.url + options.path : options.path,
         url_parts = url.replace(/#.*$/, '').split('?', 2),
@@ -187,7 +187,7 @@ const osmAuth = function(o) {
     function done(err, xhr) {
       if (err) return callback(err);
       else if (xhr.responseXML) return callback(err, xhr.responseXML);
-      else return callback(err, xhr.response);
+      return callback(err, xhr.response);
     }
   };
 
@@ -228,7 +228,7 @@ const osmAuth = function(o) {
   // get/set tokens. These are prefixed with the base URL so that `osm-auth`
   // can be used with multiple APIs and the keys in `localStorage`
   // will not clash
-  var token;
+  let token;
 
   token = function (x, y) {
     if (arguments.length === 1) return localStorage.getItem(o.url + x);

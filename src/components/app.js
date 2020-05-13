@@ -18,15 +18,15 @@ export default function App() {
   return (
     <div id="app">
       <ReducerContext.Provider value={initReducer()}>
-        <Header/>
+        <Header />
         <div className={style.app}>
           <Router history={createHashHistory()}>
-            <Home path="/"/>
-            <Quests path="/quests"/>
-            <Quest path="/quests/:id/points"/>
-            <Point path="/quests/:qid/points/:pid"/>
-            <Authenticated path="/authenticated"/>
-            <Changes path="/changes"/>
+            <Home path="/" />
+            <Quests path="/quests" />
+            <Quest path="/quests/:id/points" />
+            <Point path="/quests/:qid/points/:pid" />
+            <Authenticated path="/authenticated" />
+            <Changes path="/changes" />
           </Router>
         </div>
       </ReducerContext.Provider>

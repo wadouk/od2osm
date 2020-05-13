@@ -26,7 +26,7 @@ export default function Authenticated() {
     osmauth.authenticate(done)
   }
 
-  const done = (e) => {
+  const done = () => {
     const authenticated = osmauth.authenticated()
     dispatch({type: 'authenticated', msg: {authenticated}})
   }

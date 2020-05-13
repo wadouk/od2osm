@@ -1,5 +1,3 @@
-'use strict'
-
 import style from './loginStatus.css'
 import auth from '../osmauth'
 import {useEffect} from 'preact/hooks'
@@ -58,7 +56,7 @@ export default function Login() {
   }
 
   const renderAuthenticated = (avatar, displayName) => {
-    return avatar ? <img src={avatar} alt={displayName} title={displayName}/> :
+    return avatar ? <img src={avatar} alt={displayName} title={displayName} /> :
       <span alt={displayName} title={displayName}>{displayName}</span>
   }
 
@@ -66,7 +64,7 @@ export default function Login() {
     return <button onClick={authenticate}>Authenticate</button>
   }
 
-  const {authenticated, displayName, id, count, avatar} = state
+  const {authenticated, displayName, avatar} = state
   return <div
     className={style.loginStatus}> {authenticated ? renderAuthenticated(avatar, displayName) : renderEmpty()} </div>
 }

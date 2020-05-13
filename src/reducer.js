@@ -16,7 +16,7 @@ export const ACTION_VALUE_OD = 'valueOD'
 export const ACTION_VALUE_OSM = 'valueOSM'
 export const ACTION_CHANGE_SET_ADD = 'changesetAdd'
 
-const initState = {radius: 20, changes: [], conflated: null, points : [], filterAction: 'todo'}
+const initState = {radius: 20, changes: [], conflated: null, points: [], filterAction: 'todo'}
 
 const reducer = (state, {type, msg}) => {
   switch (type) {
@@ -52,9 +52,11 @@ const reducer = (state, {type, msg}) => {
       })()
 
     case ACTION_CREATE_CONFLATION:
-      const {overpass} = state
-      const newOverpass = {...overpass, elements : []}
-      return {...state, overpass: newOverpass, conflated: 'create'}
+      return (() => {
+        const {overpass} = state
+        const newOverpass = {...overpass, elements: []}
+        return {...state, overpass: newOverpass, conflated: 'create'}
+      })()
 
     case ACTION_POINT_MOVED:
       return (() => {
@@ -100,9 +102,15 @@ const reducer = (state, {type, msg}) => {
           lon: point.point.x,
           type: 'node',
           id: -(changes.length + 1),
-          version: 0
+          version: 0,
         })
-        const newChanges = changes.filter(({pid}) => pid !== id).concat({...element, tags: merged, pid: id, qid, action: conflated})
+        const newChanges = changes.filter(({pid}) => pid !== id).concat({
+          ...element,
+          tags: merged,
+          pid: id,
+          qid,
+          action: conflated,
+        })
         return {
           ...state,
           point: undefined,
@@ -143,6 +151,7 @@ const persitentReducer = (state, action) => {
 
 export function initReducer() {
   const recoveredState = (JSON.parse(localStorage.getItem('actions')) || []).reduce(reducer, initState)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   return useReducer(persitentReducer, recoveredState)
 }
 

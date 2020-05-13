@@ -84,12 +84,12 @@ export default function Changes() {
     <div>Nombre de changements : {changes && changes.length}</div>
     <div>
       <label htmlFor="comment">Un commentaire</label>
-      <input type="text" value={comment || ''} onChange={changeComment}/>
+      <input type="text" value={comment || ''} onChange={changeComment} />
     </div>
     <div>
       <button onClick={clickUpload} disabled={!comment || (changes && changes.length === 0) || loader === true}>Envoyer</button>
       <button onClick={cancelChanges}>Annuler les changements</button>
-      {loader ? <Loader/> : null}
+      {loader ? <Loader /> : null}
       {error && typeof error === 'string' ? <div>{error}</div> : null}
     </div>
     <div>{changes && changes.map(renderChange)}</div>

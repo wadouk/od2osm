@@ -3,7 +3,7 @@ import {useEffect} from 'preact/hooks'
 import {useContextReducer} from '../reducer'
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
-import fr from 'dayjs/locale/fr'
+import 'dayjs/locale/fr'
 
 dayjs.extend(localizedFormat)
 
@@ -42,7 +42,7 @@ export default function Quest({id}) {
 
   function buildInput([v, l]) {
     return <div>
-      <input type="radio" name="action" value={v} id={v} onChange={filter} checked={filterAction === v}/>
+      <input type="radio" name="action" value={v} id={v} onChange={filter} checked={filterAction === v} />
       <label htmlFor={v}>{l}</label>
     </div>
   }
