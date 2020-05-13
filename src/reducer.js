@@ -118,8 +118,16 @@ const reducer = (state, {type, msg}) => {
 
 export const ReducerContext = createContext('reducer')
 
+const persitentReducer = (state, action) => {
+  localStorage.setItem('actions', JSON.stringify((JSON.parse(localStorage.getItem('actions')) || []).concat(action)))
+  return reducer(state, action)
+
+}
 export function initReducer() {
-  return useReducer(reducer, {radius: 20, changes: [], conflated: null, points : [], filterAction: 'todo'})
+  const initState = {radius: 20, changes: [], conflated: null, points : [], filterAction: 'todo'}
+  const recoveredState = (JSON.parse(localStorage.getItem('actions')) || []).reduce(reducer, initState)
+  console.log('recoveredState', recoveredState)
+  return useReducer(persitentReducer, recoveredState)
 }
 
 export function useContextReducer() {
