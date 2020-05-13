@@ -37,7 +37,7 @@ create table conflation
     qid varchar not null,
     pid varchar not null,
     osmid varchar not null,
-    inserted date default clock_timestamp()
+    inserted timestamp with time zone default clock_timestamp()
 );
 
 alter table conflation owner to postgres;
