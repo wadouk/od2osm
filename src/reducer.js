@@ -121,7 +121,7 @@ const reducer = (state, {type, msg}) => {
 
     case 'changesSent':
       return (() => {
-        const {error, loader, comment, newState} = state
+        const {error, loader, comment, ...newState} = state
         return {...newState, ...initState}
       })()
 
