@@ -6,7 +6,9 @@ const Path = require('path')
 
 const {types, Pool} = require('pg')
 
-const pool = new Pool()
+const dbConfig = process.env.POSTGRESQL_ADDON_URI ? {connectionString: process.env.POSTGRESQL_ADDON_URI} : undefined
+
+const pool = new Pool(dbConfig)
 
 const hstore = require('hstore.js')
 
