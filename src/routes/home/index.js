@@ -17,6 +17,7 @@ const Home = () => (
       <li>l'api utilisé est {process.env.PREACT_APP_OSM}</li>
       <li>C'est sur cet environnement que vous devez avoir un compte</li>
       <li>S'il n'y a pas de blocage, l'application utilisera l'API publique d'OSM plus tard</li>
+      <li><a href="https://github.com/wadouk/od2osm/issues">Vous pouvez faire vos commentaires ici ou sur le mail d'annonce sur talk-fr@osm</a></li>
     </ul>
 	</div>
 );
