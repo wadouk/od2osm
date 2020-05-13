@@ -16,6 +16,8 @@ export const ACTION_VALUE_OD = 'valueOD'
 export const ACTION_VALUE_OSM = 'valueOSM'
 export const ACTION_CHANGE_SET_ADD = 'changesetAdd'
 
+const initState = {radius: 20, changes: [], conflated: null, points : [], filterAction: 'todo'}
+
 const reducer = (state, {type, msg}) => {
   switch (type) {
     case 'done':
@@ -110,6 +112,19 @@ const reducer = (state, {type, msg}) => {
           conflated: null,
         }
       })()
+
+    case 'cancelChanges':
+      return (() => {
+        const {changes, ...newState} = state
+        return {...newState, changes: []}
+      })()
+
+    case 'changesSent':
+      return (() => {
+        const {error, loader, comment, newState} = state
+        return {...newState, ...initState}
+      })()
+
     default:
       console.warn('type inconnu', {type})
       return state
@@ -120,13 +135,14 @@ export const ReducerContext = createContext('reducer')
 
 const persitentReducer = (state, action) => {
   localStorage.setItem('actions', JSON.stringify((JSON.parse(localStorage.getItem('actions')) || []).concat(action)))
-  return reducer(state, action)
+  let newState = reducer(state, action)
+  console.info('state', newState)
+  return newState
 
 }
+
 export function initReducer() {
-  const initState = {radius: 20, changes: [], conflated: null, points : [], filterAction: 'todo'}
   const recoveredState = (JSON.parse(localStorage.getItem('actions')) || []).reduce(reducer, initState)
-  console.log('recoveredState', recoveredState)
   return useReducer(persitentReducer, recoveredState)
 }
 

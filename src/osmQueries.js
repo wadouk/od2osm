@@ -102,7 +102,7 @@ async function uploadChangeSet(changeSetId, changes) {
       return [creates, modifies.concat(curr)]
     }
     return [creates.concat(curr), modifies]
-  }, [[], []]).map( x => x.map(toXmlNode))
+  }, [[], []]).map( toXmlNode )
 
   return new Promise((resolve, reject) => {
     osmauth.xhr({

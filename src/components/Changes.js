@@ -22,27 +22,33 @@ export default function Changes() {
         return {...all, [id]: {pid, qid}}
       }, {})
 
-      const ns = result.getElementsByTagName('diffResult')
+      const ns = result.getElementsByTagName('node')
       const toSend = []
       for (let i = 0; i < ns.length; ++i) {
         const oldId = ns[i].getAttribute('old_id')
         const newId = ns[i].getAttribute('new_id')
-        const {pid, qid} = ids[oldId]
+        const {pid, qid} = ids[oldId] || {}
         toSend.push({osmId: newId, pid, qid})
       }
 
       await fetch(`/api/points`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(toSend)
+        body: JSON.stringify(toSend),
       })
 
       dispatch({type: 'loader', msg: {loader: false}})
-    } catch (xhr) {
+      dispatch({type: 'changesSent'})
+    } catch (e) {
+      console.error(e)
       dispatch({type: 'loader', msg: {loader: false}})
-      dispatch({type: 'dumb', msg: {error: `${xhr.status} ${xhr.responseText}`}})
+      if (e && e.message) {
+        dispatch({type: 'dumb', msg: {error: e.message}})
+      } else if (e.status) {
+        dispatch({type: 'dumb', msg: {error: `${e.status} ${e.responseText}`}})
+      }
     }
   }
 
@@ -53,7 +59,7 @@ export default function Changes() {
   function renderChange({tags, ...props}) {
     const {action, id} = props
     return <div>
-      <h1>{action === 'valid'  ? `Modificiation ${id}` : 'Création'}</h1>
+      <h1>{action === 'valid' ? `Modificiation ${id}` : 'Création'}</h1>
       <div>
         <h2>Attributs</h2>
         {renderTags(props)}
@@ -63,18 +69,27 @@ export default function Changes() {
     </div>
   }
 
+  async function cancelChanges() {
+    await changes.map(async ({qid, pid}) => fetch(`/api/quests/${qid}/points/${pid}/conflation`, {
+      method: 'DELETE',
+    }))
+
+    dispatch({type: 'cancelChanges'})
+  }
+
   return <div>
     <h1>Changements</h1>
-    <div>Nombre de changements : {changes.length}</div>
+    <div>Nombre de changements : {changes && changes.length}</div>
     <div>
       <label htmlFor="comment">Un commentaire</label>
       <input type="text" value={comment} onChange={changeComment}/>
     </div>
     <div>
-      <button onClick={clickUpload} disabled={!comment || changes.length === 0}>Envoyer</button>
+      <button onClick={clickUpload} disabled={!comment || (changes && changes.length === 0)}>Envoyer</button>
+      <button onClick={cancelChanges}>Annuler les changements</button>
       {loader ? <Loader/> : null}
-      {error ? <div>{error}</div> : null}
+      {error && typeof error === 'string' ? <div>{error}</div> : null}
     </div>
-    <div>{changes.map(renderChange)}</div>
+    <div>{changes && changes.map(renderChange)}</div>
   </div>
 }

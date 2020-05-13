@@ -3,6 +3,7 @@ import L, {LatLng} from 'leaflet'
 import {Map, Marker, Popup, Rectangle, TileLayer} from 'react-leaflet'
 import style from './Matcher.css'
 import Loader from './Loader'
+import {getMapBounds} from '../osmQueries'
 
 import leafletCss from 'leaflet/dist/leaflet.css'
 
@@ -92,9 +93,6 @@ export default function Matcher({qid, pid}) {
   }
 
   async function fetchOverpass() {
-    if (!point) {
-      return
-    }
     const query = getOverpassQuery()
     let body = new URLSearchParams({
       data: query,
@@ -109,17 +107,43 @@ export default function Matcher({qid, pid}) {
       body: body,
     }
 
+    const r = await fetch("http://overpass-api.de/api/interpreter", options)
+
+    return await r.json()
+  }
+
+  async function fetchFromOsm() {
+    const {properties} = point
+    const bbox = new LatLng(point.point.y, point.point.x).toBounds(radius)
+
+    const result = await getMapBounds(bbox)
+
+
+    const newElements = result.elements.filter(({tags, lat, lon, type}) => {
+      return (type === 'node') && tags && lat && lon
+        && ['shop', 'amenity'].some(t => {
+          return properties && properties[t] && properties[t].split(';').some((v) => v === tags[t])
+        })
+    })
+
+    return {elements: newElements}
+  }
+
+  async function fetchOsmData() {
+    if (!point) {
+      return
+    }
+
     emit(ACTION_ASYNC, {loaderOverpass: true})
     try {
-      const r = await fetch("http://overpass-api.de/api/interpreter", options)
+      const d = await (process.env.PREACT_APP_OSM_FETCHER === 'osm' ? fetchFromOsm() : fetchOverpass())
 
-      const d = await r.json()
       emit(ACTION_ASYNC, {loaderOverpass: false})
       emit(ACTION_OVERPASS, {overpass: d})
     } catch (e) {
-      emit(ACTION_ASYNC, {loaderOverpass: 'fail'})
+      console.error(e)
+      emit(ACTION_ASYNC, {loaderOverpass: 'fail', error: e})
     }
-
   }
 
   function markerOpendataMoved(e) {
@@ -128,12 +152,12 @@ export default function Matcher({qid, pid}) {
 
 
   function renderCirclesElements({elements}) {
-    return elements.map(renderCirclesElement)
+    return elements && elements.length ? elements.map(renderCirclesElement) : null
   }
 
   function renderCirclesElement({lon, lat}) {
     return <Marker position={{lon, lat}}>
-      <Popup>Overpass</Popup>
+      <Popup>OSM</Popup>
     </Marker>
   }
 
@@ -151,10 +175,12 @@ export default function Matcher({qid, pid}) {
         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         url='http://{s}.tile.osm.org/{z}/{x}/{y}.png'
       />
-      <Marker draggable={true} position={{lon: point.point.x, lat: point.point.y}}
-              onMoveEnd={markerOpendataMoved}><Popup>Opendata</Popup></Marker>
-      <Rectangle bounds={bbox}/>
       {renderCirclesOverpass()}
+      <Marker draggable={true} position={{lon: point.point.x, lat: point.point.y}}
+              onMoveEnd={markerOpendataMoved}>
+        <Popup>Opendata</Popup>
+      </Marker>
+      <Rectangle bounds={bbox}/>
     </Map>
   }
 
@@ -163,7 +189,7 @@ export default function Matcher({qid, pid}) {
   const allKeyTags = Object.keys({...tags, ...properties})
 
   useEffect(async () => {
-    await fetchOverpass()
+    await fetchOsmData()
   }, [point && point.id])
 
   function radiusChanged(e) {
@@ -238,7 +264,7 @@ export default function Matcher({qid, pid}) {
                size={5}
                value={radius}
                onChange={radiusChanged}/>
-               mètres
+        mètres
       </div>
       <ul>
         <li>le rectangle représente la zone de recherche</li>
@@ -255,9 +281,9 @@ export default function Matcher({qid, pid}) {
         .join(', ') || ''
       }</p>
       <div className={style.actions}>
-        <button onClick={fetchOverpass}>Conflation</button>
+        <button onClick={fetchOsmData}>Conflation</button>
         <Loader loaderState={loaderOverpass}/>
-        <span>{overpass && overpass.elements ? `Nb résultat OSM: ${overpass.elements.length}` : '' }</span>
+        <span>{overpass && overpass.elements ? `Nb résultat OSM: ${overpass.elements.length}` : ''}</span>
         <button
           className={style.secondGroupActions}
           onClick={clickEmit(ACTION_VALID_CONFLATION)}

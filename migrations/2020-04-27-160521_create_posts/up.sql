@@ -53,18 +53,23 @@ alter table conflation
 alter table conflation alter column qid type integer using qid::integer;
 
 create or replace view conflatedpoints as
-select p.qid,
-       p.id                 as pid,
-       properties -> 'name' as name,
-       c.id                 as cid,
-       coalesce(c.action, 'todo') as action,
+SELECT p.qid,
+       p.id                                          AS pid,
+       p.properties -> 'name'::text                  AS name,
+       c.id                                          AS cid,
+       COALESCE(c.action, 'todo'::character varying) AS action,
        c.inserted,
        c.osmid
-from points p
-         left outer join conflation c on (c.qid = p.qid
-    and c.pid = p.id)
-         left outer join
-     (select max(id) id, max(inserted) inserted
-      from conflation
-      group by qid, pid) t
-     on t.id = c.id
+FROM points p
+         left outer JOIN
+     (select u.*
+      from conflation u
+               JOIN (SELECT max(conflation.id)       AS id,
+                            max(conflation.inserted) AS inserted,
+                            conflation.qid,
+                            conflation.pid
+                     FROM conflation
+                     GROUP BY conflation.qid, conflation.pid) t
+                    ON
+                            t.id = u.id
+     ) c ON c.qid = p.qid AND c.pid = p.id;
