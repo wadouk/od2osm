@@ -1,5 +1,3 @@
-'use strict'
-
 const Hapi = require('@hapi/hapi')
 const Inert = require('@hapi/inert')
 const Path = require('path')
@@ -15,9 +13,7 @@ const hstore = require('hstore.js')
 const dbHstoreType = async () => {
   try {
     const oids = await pool.query("SELECT oid FROM pg_type WHERE typname='hstore'")
-    types.setTypeParser(oids.rows[0].oid, function (val) {
-      return hstore.parse(val)
-    })
+    types.setTypeParser(oids.rows[0].oid, val => hstore.parse(val))
   } catch (e) {
     console.error(e)
   }
@@ -42,31 +38,37 @@ const start = async () => {
     path: '/{param*}',
     handler: {
       directory: {
-        path: '.'
-      }
-    }
-  });
+        path: '.',
+      },
+    },
+  })
 
   await dbHstoreType()
 
   server.route({
-    method: 'GET',
-    path: '/api/quests',
-    options: {
-      cors: true,
+      method: 'GET',
+      path: '/api/quests',
+      options: {
+        cors: true,
+      },
+      handler: async () => {
+        try {
+
+          const res = await pool.query('select * from quests')
+          return res.rows
+        } catch (e) {
+          console.error(e)
+        }
+      },
     },
-    handler: async (request, h) => {
-      const res = await pool.query('select * from quests')
-      return res.rows
-    },
-  })
+  )
   server.route({
     method: 'GET',
     path: '/api/quests/{qid}/points',
     options: {
       cors: true,
     },
-    handler: async (request, h) => {
+    handler: async (request) => {
       try {
         const {params} = request
         const {qid} = params
@@ -84,7 +86,7 @@ const start = async () => {
     options: {
       cors: true,
     },
-    handler: async (request, h) => {
+    handler: async (request) => {
       try {
         const {params} = request
         const {qid, pid} = params
@@ -230,7 +232,7 @@ process.on('unhandledRejection', (err) => {
   console.trace(err)
 })
 
-process.on("SIGINT", async function () {
+process.on("SIGINT", async () => {
   await pool.end()
   process.exit()
 })
