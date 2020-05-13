@@ -74,8 +74,7 @@ const osmAuth = function(o) {
     // Called by a function in a landing page, in the popup window. The
     // window closes itself.
     window.authComplete = function(token) {
-      var oauth_token = ohauth.stringQs(token.split('?')[1]);
-      get_access_token(oauth_token.oauth_token);
+      get_access_token(token);
       delete window.authComplete;
     };
 
@@ -255,6 +254,6 @@ const osmAuth = function(o) {
 export default osmAuth({
   oauth_secret: process.env.PREACT_APP_OAUTH_SECRET,
   oauth_consumer_key: process.env.PREACT_APP_OAUTH_CLIENT,
-  landing: '/login',
+  landing: '/#/authenticated',
   url: process.env.PREACT_APP_OSM
 })

@@ -28,7 +28,7 @@ export default function Login() {
   useEffect(() => {
     const oauth_token = new URLSearchParams(window.location.search.slice(1)).get("oauth_token")
     if (oauth_token) {
-      opener.authComplete(window.location.href)
+      opener.authComplete(oauth_token)
       window.close()
     }
 
