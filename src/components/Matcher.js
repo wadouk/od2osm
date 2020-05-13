@@ -110,11 +110,16 @@ export default function Matcher({qid, pid}) {
     }
 
     emit(ACTION_ASYNC, {loaderOverpass: true})
-    const r = await fetch("http://overpass-api.de/api/interpreter", options)
+    try {
+      const r = await fetch("http://overpass-api.de/api/interpreter", options)
 
-    const d = await r.json()
-    emit(ACTION_ASYNC, {loaderOverpass: false})
-    emit(ACTION_OVERPASS, {overpass: d})
+      const d = await r.json()
+      emit(ACTION_ASYNC, {loaderOverpass: false})
+      emit(ACTION_OVERPASS, {overpass: d})
+    } catch (e) {
+      emit(ACTION_ASYNC, {loaderOverpass: 'fail'})
+    }
+
   }
 
   function markerOpendataMoved(e) {
@@ -251,7 +256,8 @@ export default function Matcher({qid, pid}) {
       }</p>
       <div className={style.actions}>
         <button onClick={fetchOverpass}>Conflation</button>
-        {loaderOverpass ? <Loader/> : null}
+        <Loader loaderState={loaderOverpass}/>
+        <span>{overpass && overpass.elements ? `Nb résultat OSM: ${overpass.elements.length}` : '' }</span>
         <button
           className={style.secondGroupActions}
           onClick={clickEmit(ACTION_VALID_CONFLATION)}

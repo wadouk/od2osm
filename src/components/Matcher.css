@@ -31,6 +31,17 @@
 
 .actions {
     white-space: nowrap;
+
+    display: flex;
+    align-content: space-between;
+}
+
+.actions .secondGroupActions {
+    margin-left: auto;
+}
+
+.actions > * {
+    margin-right: 10px;
 }
 
 .value {
@@ -59,11 +70,3 @@
     margin-right: 0.3em;
 }
 
-.actions {
-    display: flex;
-    align-content: space-between;
-}
-
-.secondGroupActions {
-    margin-left: auto;
-}
