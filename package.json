@@ -10,7 +10,8 @@
     "predev": "nodemon server &",
     "dev": "preact watch",
     "lint": "eslint src",
-    "test": "jest"
+    "test": "jest",
+    "prestart": "yarn build"
   },
   "eslintConfig": {
     "extends": "preact",

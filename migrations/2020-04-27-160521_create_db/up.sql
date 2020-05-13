@@ -1,7 +1,3 @@
--- Your SQL goes here
-create database od2osm;
-
-
 CREATE EXTENSION if not exists hstore;
 
 create table if not exists opendata
@@ -28,6 +24,15 @@ alter table quests
 	add constraint quests_pk
 		primary key (id);
 
+create table points
+(
+    point point,
+    properties hstore,
+    id varchar not null
+        constraint opendata_pkey
+            primary key,
+    qid integer
+);
 
 create table conflation
 (
@@ -39,8 +44,6 @@ create table conflation
     osmid varchar not null,
     inserted timestamp with time zone default clock_timestamp()
 );
-
-alter table conflation owner to postgres;
 
 create unique index conflation_id_uindex
     on conflation (id);
