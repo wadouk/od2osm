@@ -2,6 +2,7 @@
 
 const Hapi = require('@hapi/hapi')
 const Inert = require('@hapi/inert')
+const Path = require('path')
 
 const {types, Pool} = require('pg')
 
@@ -24,15 +25,31 @@ const start = async () => {
 
   const server = new Hapi.Server({
     port: 3000,
+
+    routes: {
+      files: {
+        relativeTo: Path.join(__dirname, 'build')
+      }
+    }
   })
 
   await server.register(Inert)
+
+  server.route({
+    method: 'GET',
+    path: '/{param*}',
+    handler: {
+      directory: {
+        path: '.'
+      }
+    }
+  });
 
   await dbHstoreType()
 
   server.route({
     method: 'GET',
-    path: '/quests',
+    path: '/api/quests',
     options: {
       cors: true,
     },
@@ -43,7 +60,7 @@ const start = async () => {
   })
   server.route({
     method: 'GET',
-    path: '/quests/{qid}/points',
+    path: '/api/quests/{qid}/points',
     options: {
       cors: true,
     },
@@ -61,7 +78,7 @@ const start = async () => {
 
   server.route({
     method: 'GET',
-    path: '/quests/{qid}/points/{pid}',
+    path: '/api/quests/{qid}/points/{pid}',
     options: {
       cors: true,
     },
@@ -79,7 +96,7 @@ const start = async () => {
 
   server.route({
     method: 'PATCH',
-    path: '/quests/{qid}/points/{pid}/conflation/{osmId}',
+    path: '/api/quests/{qid}/points/{pid}/conflation/{osmId}',
     options: {
       cors: true,
     },
@@ -97,7 +114,7 @@ const start = async () => {
   })
   server.route({
     method: 'PATCH',
-    path: '/points',
+    path: '/api/points',
     options: {
       cors: true,
       payload: {
@@ -126,7 +143,7 @@ const start = async () => {
   })
   server.route({
     method: 'PATCH',
-    path: '/quests/{qid}/points/{pid}/conflation',
+    path: '/api/quests/{qid}/points/{pid}/conflation',
     options: {
       cors: true,
     },
@@ -144,7 +161,7 @@ const start = async () => {
   })
   server.route({
     method: 'DELETE',
-    path: '/quests/{qid}/points/{pid}/conflation',
+    path: '/api/quests/{qid}/points/{pid}/conflation',
     options: {
       cors: true,
     },
@@ -163,7 +180,7 @@ const start = async () => {
 
   server.route({
     method: 'POST',
-    path: '/quests',
+    path: '/api/quests',
     options: {
       payload: {
         multipart: true,

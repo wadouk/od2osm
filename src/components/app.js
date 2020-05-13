@@ -1,4 +1,5 @@
 import {Router} from 'preact-router'
+import {createHashHistory} from 'history'
 
 import Header from './header'
 
@@ -19,7 +20,7 @@ export default function App() {
       <ReducerContext.Provider value={initReducer()}>
         <Header/>
         <div className={style.app}>
-          <Router>
+          <Router history={createHashHistory()}>
             <Home path="/"/>
             <Quests path="/quests"/>
             <Quest path="/quests/:id/points"/>
