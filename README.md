@@ -36,11 +36,13 @@ L'outil stock les points déjà rapprochés pour ne pas les re proposer par déf
  2. Uploader le fichier
  3. La communauté peut traiter les points pour ajouter / modifier ceux existants dans OSM
  
- # Limites
+ # Limites et problèmes de la solution
  
  Pour les besoins de test (cohérence des environnement OSM) la requête de comparaison des points existant passe par `maps?bounds` d'OSM plutôt qu'overpass, beaucoup de données envoyés et beaucoup de filtrage sur le client, risque sur le quota
 
-TODO
+On m'a parlé de PDA et PDI mais j'ai pas tout compris
+
+od2osm ne crée pas d'adresse ou ne fusionne pas de point d'adresse avec un point d´intéret, il va éventuellement le compléter s'il une adresse est déjà une `amenity` ou un `shop`
 
 # Only for dev
 ## CLI Commands
