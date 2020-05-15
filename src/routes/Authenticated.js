@@ -1,6 +1,7 @@
 import osmauth from '../osmauth'
 import {ReducerContext} from '../reducer'
 import {useContext, useEffect} from 'preact/hooks'
+import {win} from 'leaflet/src/core/Browser'
 
 export default function Authenticated() {
   const [state, dispatch] = useContext(ReducerContext)
@@ -26,13 +27,28 @@ export default function Authenticated() {
     osmauth.authenticate(done)
   }
 
+  function resetLocalStorage() {
+    localStorage.removeItem('actions')
+    window.location.reload()
+  }
+
   const done = () => {
     const authenticated = osmauth.authenticated()
     dispatch({type: 'authenticated', msg: {authenticated}})
   }
 
   const {authenticated} = state
-  return authenticated ? <button onClick={logout}>Logout</button> :
-    <button onClick={authenticate}>Authenticate</button>
+
+  function buttonAuthenticated() {
+    return authenticated ? <button onClick={logout}>Logout</button> :
+      <button onClick={authenticate}>Authenticate</button>
+  }
+
+  return <div>
+    <h1>Authentifcation</h1>
+    <div>{buttonAuthenticated()}</div>
+    <h1>En cas de problème, vider le local storage et recharger</h1>
+    <div><button onClick={resetLocalStorage}>Bouton magique</button></div>
+  </div>
 }
 
