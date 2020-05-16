@@ -135,6 +135,7 @@ export default function Matcher({qid, pid}) {
       return
     }
 
+    emit(ACTION_OVERPASS)
     emit(ACTION_ASYNC, {loaderOverpass: true})
     try {
       const d = await (process.env.PREACT_APP_OSM_FETCHER === 'osm' ? fetchFromOsm() : fetchOverpass())

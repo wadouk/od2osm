@@ -28,12 +28,18 @@ const reducer = (state, {type, msg}) => {
     case 'dumb':
     case 'loader':
     case ACTION_ASYNC:
-    case ACTION_OVERPASS:
     case ACTION_RADIUS_CHANGED:
     case 'points':
     case 'filterAction':
       return {...state, ...msg}
 
+    case ACTION_OVERPASS:
+      return (() => {
+        const {overpass, ...newState} = state
+        const {overpass: newOverpass} = msg || {}
+
+        return {...newState, overpass: newOverpass}
+      })()
 
     case ACTION_POINT:
       return (() => {
