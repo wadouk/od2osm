@@ -44,6 +44,10 @@
     margin-right: 10px;
 }
 
+.warnThis {
+    border: orangered thin solid;
+}
+
 .value {
     min-width: 15em;
     max-width: 15em;

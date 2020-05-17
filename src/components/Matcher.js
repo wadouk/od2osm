@@ -4,6 +4,7 @@ import {Map, Marker, Popup, Rectangle, TileLayer} from 'react-leaflet'
 import style from './Matcher.css'
 import Loader from './Loader'
 import {getMapBounds} from '../osmQueries'
+import cx from 'classnames'
 
 // eslint-disable-next-line no-unused-vars
 import leafletCss from 'leaflet/dist/leaflet.css'
@@ -30,6 +31,8 @@ function getOsmPoint(overpass) {
   const {elements} = overpass || {}
   return elements && elements.length > 0 && elements[0] || {}
 }
+
+const MAIN_TAGS = ['shop', 'amenity']
 
 delete L.Icon.Default.prototype._getIconUrl
 
@@ -85,7 +88,7 @@ export default function Matcher({qid, pid}) {
     const bbox = new LatLng(point.point.y, point.point.x).toBounds(radius)
     const bboxOverpass = [bbox.getSouth(), bbox.getWest(), bbox.getNorth(), bbox.getEast()].map(v => v.toFixed(6)).join(', ')
     const q = Object.entries(properties)
-      .filter(([k]) => ['shop', 'amenity'].indexOf(k) !== -1)
+      .filter(([k]) => MAIN_TAGS.indexOf(k) !== -1)
       .map(([k, v]) => v.split(";")
         .map(u => `node ["${k}"="${u}"](${bboxOverpass}); `).join("\n"),
       )[0]
@@ -122,7 +125,7 @@ export default function Matcher({qid, pid}) {
 
     const newElements = result.elements.filter(({tags, lat, lon, type}) => {
       return (type === 'node') && tags && lat && lon
-        && ['shop', 'amenity'].some(t => {
+        && MAIN_TAGS.some(t => {
           return properties && properties[t] && properties[t].split(';').some((v) => v === tags[t])
         })
     })
@@ -190,9 +193,10 @@ export default function Matcher({qid, pid}) {
   const {tags} = getOsmPoint(overpass)
   const allKeyTags = Object.keys({...tags, ...properties})
 
+  let pointId = point && point.id
   useEffect(async () => {
     await fetchOsmData()
-  }, [point && point.id])
+  }, [pointId])
 
   function radiusChanged(e) {
     emit(ACTION_RADIUS_CHANGED, {radius: e.target.value})
@@ -208,8 +212,9 @@ export default function Matcher({qid, pid}) {
       return t && t[v] || ''
     }
 
-    return (<tr>
-      <td className={style.keys}>{v} :</td>
+    let warnOnMultipleValuesForMainTag = tagIsMainAndHasMultipleValues(merged)(v)
+    return (<tr className={warnOnMultipleValuesForMainTag}>
+      <td className={cx(style.keys, {[style.warnThis]:warnOnMultipleValuesForMainTag})}>{v} :</td>
       <td className={style.value}
           alt={showValue(properties)}
           title={showValue(properties)}
@@ -225,6 +230,7 @@ export default function Matcher({qid, pid}) {
       <td className={style.actions}>
         <input type="text"
                value={showValue(merged)}
+               className={cx({[style.warnThis]:warnOnMultipleValuesForMainTag})}
                onChange={e => emit(ACTION_INPUT_VALUE, {key: v, value: e.target.value})} />
         <button
           disabled={pickItDisabled(properties)}
@@ -244,16 +250,28 @@ export default function Matcher({qid, pid}) {
   const cancelConflationDisabled = !(typeof conflated === 'string')
   const createConflationDisabled = !overpass || typeof conflated === 'string'
 
+  function mainTagHasMultipleValues() {
+    return MAIN_TAGS.some(tagIsMainAndHasMultipleValues(merged))
+  }
+
+  function tagIsMainAndHasMultipleValues(keyValues) {
+    return (currentKey) => keyValues && keyValues[currentKey] && keyValues[currentKey].split(';').length > 1
+  }
+
   function wordingAction() {
+    const wordings = []
     if (merged) {
       if (conflated === 'valid' && overpass && overpass.elements.length > 0) {
-        return <li>Vous avez choisi d'éventuellement completer le point OSM existant avec les données de l'open
-          data</li>
+        wordings.push(<li>Vous avez choisi d'éventuellement completer le point OSM existant avec les données de l'open
+          data</li>)
       } else if (conflated === 'create') {
-        return <li>Vous avez choisi de créer le point avec les données en OpenData</li>
+        wordings.push(<li>Vous avez choisi de créer le point avec les données en OpenData</li>)
+      }
+      if (mainTagHasMultipleValues()) {
+        wordings.push(<li>Le tag principal {MAIN_TAGS.filter(t => allKeyTags.indexOf(t) > -1)[0]} à plusieurs valeurs, le voulez vraiment ?</li>)
       }
     }
-    return null
+    return wordings
   }
 
   function firstStep() {
@@ -278,7 +296,7 @@ export default function Matcher({qid, pid}) {
       </ul>
       <h3>Le point à trouver par ici :</h3>
       <p>{properties && Object.entries(properties)
-        .filter(([k]) => ['shop', 'amenity', 'name'].indexOf(k) !== -1)
+        .filter(([k]) => MAIN_TAGS.concat('name').indexOf(k) !== -1)
         .map(([k, v]) => `${k  }=${  v}`)
         .join(', ') || ''
       }</p>
