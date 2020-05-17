@@ -1,7 +1,7 @@
 import osmauth from './osmauth'
 
-export async function upload(comment, changeSetCount, changes) {
-  const changeSetId = await createChangeSet(comment, changeSetCount)
+export async function upload(comment, changeSetCount, changes, source) {
+  const changeSetId = await createChangeSet(comment, changeSetCount, source)
   const result = await uploadChangeSet(changeSetId, changes)
   await closeChangeSet(changeSetId)
   return result
@@ -33,11 +33,12 @@ export async function getMapBounds(bounds) {
   })
 }
 
-async function createChangeSet(comment, changeSetCount) {
+async function createChangeSet(comment, changeSetCount, source) {
   let content = `<osm>
       <changeset>
         <tag k="created_by" v="od2osm"/>
         <tag k="comment" v="${comment}"/>
+        <tag k="source" v="${source}"/>
         <tag k="changesets_count" v="${changeSetCount}"/>
       </changeset>
   </osm>`

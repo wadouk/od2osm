@@ -2,10 +2,22 @@ import {useContextReducer} from '../reducer'
 import {upload} from '../osmQueries'
 import Loader from './Loader'
 import {route} from 'preact-router'
+import {useEffect} from 'preact/hooks'
 
 export default function Changes() {
   const [state, dispatch] = useContextReducer()
-  const {changes, comment, changeSetCount, loader, error} = state
+  const {changes, comment, changeSetCount, loader, error, quests, changeSetSource} = state
+
+  const qid = changes
+    .map(c => c.qid)
+    .reduce((acc, curr) => {
+      if (acc.indexOf(curr) === -1)
+        return acc.concat(curr)
+      return acc
+
+    })[0]
+  let filteredQuests = quests.filter(q => q.id == qid)
+  const source = changeSetSource || (filteredQuests && filteredQuests.length > 0 && filteredQuests[0].more_info_url) || ''
 
   function renderTags(t) {
     return t ? Object.entries(t)
@@ -17,7 +29,7 @@ export default function Changes() {
   async function clickUpload() {
     try {
       dispatch({type: 'loader', msg: {loader: true}})
-      const result = await upload(comment, changeSetCount, changes)
+      const result = await upload(comment, changeSetCount, changes, source)
 
       const ids = changes.reduce((all, {pid, qid, id}) => {
         return {...all, [id]: {pid, qid}}
@@ -79,6 +91,14 @@ export default function Changes() {
     dispatch({type: 'cancelChanges'})
   }
 
+
+  function changeSource(e) {
+    dispatch({type: 'updateSource', msg: {changeSetSource: e.target.value}})
+  }
+  useEffect(() => {
+    dispatch({type: 'updateSource', msg: {changeSetSource: source}})
+  }, [])
+
   return <div>
     <h1>Changements</h1>
     <div>Nombre de changements : {changes && changes.length}</div>
@@ -87,11 +107,15 @@ export default function Changes() {
       <input type="text" value={comment || ''} onChange={changeComment} />
     </div>
     <div>
+      <label htmlFor="source">Source</label>
+      <input type="text" value={source || ''} size={50} onChange={changeSource} />
+    </div>
+    <div>
       <button onClick={clickUpload} disabled={!comment || (changes && changes.length === 0) || loader === true}>Envoyer</button>
       <button onClick={cancelChanges}>Annuler les changements</button>
       {loader ? <Loader /> : null}
       {error && typeof error === 'string' ? <div>{error}</div> : null}
     </div>
-    <div>{changes && changes.map(renderChange)}</div>
+    <div>{changes && source && changes.map(renderChange)}</div>
   </div>
 }

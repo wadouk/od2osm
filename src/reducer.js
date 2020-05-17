@@ -16,7 +16,7 @@ export const ACTION_VALUE_OD = 'valueOD'
 export const ACTION_VALUE_OSM = 'valueOSM'
 export const ACTION_CHANGE_SET_ADD = 'changesetAdd'
 
-const initState = {radius: 20, changes: [], conflated: null, points: [], filterAction: 'todo'}
+const initState = {radius: 20, changes: [], conflated: null, points: [], filterAction: 'todo', quests: []}
 
 const reducer = (state, {type, msg}) => {
   switch (type) {
@@ -31,6 +31,8 @@ const reducer = (state, {type, msg}) => {
     case ACTION_RADIUS_CHANGED:
     case 'points':
     case 'filterAction':
+    case 'quests':
+    case 'updateSource':
       return {...state, ...msg}
 
     case ACTION_OVERPASS:
