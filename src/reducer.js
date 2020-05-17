@@ -37,7 +37,7 @@ const reducer = (state, {type, msg}) => {
 
     case ACTION_OVERPASS:
       return (() => {
-        const {overpass, ...newState} = state
+        const {overpass, merged, conflated, ...newState} = state
         const {overpass: newOverpass} = msg || {}
 
         return {...newState, overpass: newOverpass}

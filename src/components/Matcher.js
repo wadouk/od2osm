@@ -10,20 +10,21 @@ import cx from 'classnames'
 import leafletCss from 'leaflet/dist/leaflet.css'
 
 import {
-  ACTION_POINT,
   ACTION_ASYNC,
-  ACTION_OVERPASS,
-  ACTION_RADIUS_CHANGED,
-  ACTION_POINT_MOVED,
-  ACTION_MORE_OSM,
-  ACTION_MORE_OD,
+  ACTION_CANCEL_CONFLATION,
+  ACTION_CHANGE_SET_ADD,
+  ACTION_CREATE_CONFLATION,
   ACTION_INPUT_VALUE,
+  ACTION_MORE_OD,
+  ACTION_MORE_OSM,
+  ACTION_OVERPASS,
+  ACTION_POINT,
+  ACTION_POINT_MOVED,
+  ACTION_RADIUS_CHANGED,
+  ACTION_VALID_CONFLATION,
   ACTION_VALUE_OD,
   ACTION_VALUE_OSM,
-  ACTION_CHANGE_SET_ADD,
   useContextReducer,
-  ACTION_VALID_CONFLATION,
-  ACTION_CANCEL_CONFLATION, ACTION_CREATE_CONFLATION,
 } from '../reducer'
 import {route} from 'preact-router'
 
@@ -174,14 +175,16 @@ export default function Matcher({qid, pid}) {
     if (!point) {
       return <Loader />
     }
-    const bbox = new LatLng(point.point.y, point.point.x).toBounds(radius)
-    return <Map center={{lon: point.point.x, lat: point.point.y}} bounds={bbox} className={style.leafletContainer}>
+    let defaultPosition = new LatLng(point.point.y, point.point.x)
+    const bbox = defaultPosition.toBounds(radius)
+    return <Map bounds={bbox} className={style.leafletContainer}>
       <TileLayer
         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         url='http://{s}.tile.osm.org/{z}/{x}/{y}.png'
       />
       {renderCirclesOverpass()}
-      <Marker draggable={true} position={{lon: point.point.x, lat: point.point.y}}
+      <Marker draggable={true}
+              position={defaultPosition}
               onMoveEnd={markerOpendataMoved}>
         <Popup>Opendata</Popup>
       </Marker>
