@@ -369,8 +369,14 @@ export default function Matcher({qid, pid}) {
     </div>
   }
 
-  function nothingToChange() {
-
+  async function nothingToChange() {
+    const osmId = overpass.elements[0].id
+    await fetch(`/api/quests/${qid}/points/${pid}/conflation/${osmId}`, {
+      method: 'PATCH',
+      body: new URLSearchParams({status: 'done'})
+    })
+    emit('nothingToChange')
+    route(`/quests/${qid}/points`)
   }
 
   function secondStep() {

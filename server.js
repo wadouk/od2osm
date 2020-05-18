@@ -103,13 +103,18 @@ const start = async () => {
     path: '/api/quests/{qid}/points/{pid}/conflation/{osmId}',
     options: {
       cors: true,
+      payload: {
+        allow: 'application/x-www-form-urlencoded',
+        parse: true
+      },
     },
     handler: async (request, h) => {
       try {
-        const {params} = request
+        const {params, payload} = request
         const {qid, pid, osmId} = params
+        const {status = 'valid'} = payload
         await pool.query("delete from conflation where qid=$1 and pid=$2 and (action = 'valid' or action is null)", [qid, pid])
-        await pool.query('insert into conflation (qid, pid, action, osmid) values ($1, $2, $3, $4)', [qid, pid, 'valid', osmId])
+        await pool.query('insert into conflation (qid, pid, action, osmid) values ($1, $2, $3, $4)', [qid, pid, status, osmId])
         return h.response()
       } catch (e) {
         console.error(e)
