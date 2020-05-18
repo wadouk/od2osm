@@ -15,7 +15,7 @@ export default function Changes() {
         return acc.concat(curr)
       return acc
 
-    })[0]
+    }, [])[0]
   let filteredQuests = quests.filter(q => q.id == qid)
   const source = changeSetSource || (filteredQuests && filteredQuests.length > 0 && filteredQuests[0].more_info_url) || ''
 

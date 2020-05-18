@@ -127,7 +127,7 @@ export default function Matcher({qid, pid}) {
     const newElements = result.elements.filter(({tags, lat, lon, type}) => {
       return (type === 'node') && tags && lat && lon
         && MAIN_TAGS.some(t => {
-          return properties && properties[t] && properties[t].split(';').some((v) => v === tags[t])
+          return properties && properties[t] && properties[t].split(';').some((v) => tags[t].indexOf(v) > -1 )
         })
     })
 
