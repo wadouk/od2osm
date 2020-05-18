@@ -116,6 +116,10 @@ const start = async () => {
       }
     },
   })
+
+  /**
+   * Patch when changeset upload to OSM
+   */
   server.route({
     method: 'PATCH',
     path: '/api/points',
@@ -150,19 +154,65 @@ const start = async () => {
     path: '/api/quests/{qid}/points/{pid}/conflation',
     options: {
       cors: true,
+      payload: {
+        allow: 'application/x-www-form-urlencoded',
+        parse: true
+      },
     },
     handler: async (request, h) => {
       try {
-        const {params} = request
+        const {params, payload} = request
         const {qid, pid} = params
-        await pool.query("delete from conflation where qid=$1 and pid=$2 and (action in ('valid', 'create') or action is null)", [qid, pid])
-        await pool.query('insert into conflation (qid, pid, action) values ($1, $2, $3)', [qid, pid, 'create'])
+        const {status = 'create'} = payload
+        await pool.query("delete from conflation where qid=$1 and pid=$2 and (action in ('valid', 'create', 'cancel') or action is null)", [qid, pid])
+        await pool.query('insert into conflation (qid, pid, action) values ($1, $2, $3)', [qid, pid, status])
         return h.response()
       } catch (e) {
         console.error(e)
       }
     },
   })
+  server.route({
+    method: 'PATCH',
+    path: '/api/quests/{qid}/points/{pid}/comment',
+    options: {
+      cors: true,
+      payload: {
+        allow: 'application/x-www-form-urlencoded',
+        parse: true
+      },
+      response: {
+        emptyStatusCode: 204,
+      },
+    },
+    handler: async (request, h) => {
+      try {
+        const {params, payload} = request
+        const {qid, pid} = params
+        const {comment} = payload
+        await pool.query('insert into comment (qid, pid, comment) values ($1, $2, $3)', [qid, pid, comment])
+        return h.response()
+      } catch (e) {
+        console.error(e)
+      }
+    },
+  })
+  server.route({
+    method: 'GET',
+    path: '/api/points/comments',
+    options: {
+      cors: true,
+    },
+    handler: async () => {
+      try {
+        const res = await pool.query('select distinct comment from comment order by comment')
+        return res.rows
+      } catch (e) {
+        console.error(e)
+      }
+    },
+  })
+
   server.route({
     method: 'DELETE',
     path: '/api/quests/{qid}/points/{pid}/conflation',

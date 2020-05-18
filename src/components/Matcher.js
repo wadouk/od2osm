@@ -45,7 +45,7 @@ L.Icon.Default.mergeOptions({
 
 export default function Matcher({qid, pid}) {
   const [state, dispatch] = useContextReducer()
-  const {point, radius, overpass, loaderOverpass, merged, conflated} = state
+  const {point, radius, overpass, loaderOverpass, merged, conflated, conflateFail, conflateAnswers, conflateComment} = state
 
   function emit(type, msg) {
     dispatch({type, msg})
@@ -127,7 +127,7 @@ export default function Matcher({qid, pid}) {
     const newElements = result.elements.filter(({tags, lat, lon, type}) => {
       return (type === 'node') && tags && lat && lon
         && MAIN_TAGS.some(t => {
-          return properties && properties[t] && properties[t].split(';').some((v) => tags[t].indexOf(v) > -1 )
+          return properties && properties[t] && properties[t].split(';').some((v) => tags[t].indexOf(v) > -1)
         })
     })
 
@@ -217,7 +217,7 @@ export default function Matcher({qid, pid}) {
 
     let warnOnMultipleValuesForMainTag = tagIsMainAndHasMultipleValues(merged)(v)
     return (<tr className={warnOnMultipleValuesForMainTag}>
-      <td className={cx(style.keys, {[style.warnThis]:warnOnMultipleValuesForMainTag})}>{v} :</td>
+      <td className={cx(style.keys, {[style.warnThis]: warnOnMultipleValuesForMainTag})}>{v} :</td>
       <td className={style.value}
           alt={showValue(properties)}
           title={showValue(properties)}
@@ -233,7 +233,7 @@ export default function Matcher({qid, pid}) {
       <td className={style.actions}>
         <input type="text"
                value={showValue(merged)}
-               className={cx({[style.warnThis]:warnOnMultipleValuesForMainTag})}
+               className={cx({[style.warnThis]: warnOnMultipleValuesForMainTag})}
                onChange={e => emit(ACTION_INPUT_VALUE, {key: v, value: e.target.value})} />
         <button
           disabled={pickItDisabled(properties)}
@@ -271,10 +271,31 @@ export default function Matcher({qid, pid}) {
         wordings.push(<li>Vous avez choisi de créer le point avec les données en OpenData</li>)
       }
       if (mainTagHasMultipleValues()) {
-        wordings.push(<li>Le tag principal {MAIN_TAGS.filter(t => allKeyTags.indexOf(t) > -1)[0]} à plusieurs valeurs, le voulez vraiment ?</li>)
+        wordings.push(<li>Le tag principal {MAIN_TAGS.filter(t => allKeyTags.indexOf(t) > -1)[0]} à plusieurs valeurs,
+          le voulez vraiment ?</li>)
       }
     }
     return wordings
+  }
+
+  async function impossibleToConflate() {
+    emit('dumb', {conflateFail: true})
+    const res = await fetch('/api/points/comments')
+    const comments = await res.json()
+    emit('dumb', {conflateAnswers: comments.map(c => c.comment)})
+  }
+
+  async function sendComment() {
+    await fetch(`/api/quests/${qid}/points/${pid}/comment`, {
+      method: 'PATCH',
+      body: new URLSearchParams({ comment: conflateComment || ''})
+    })
+    await fetch(`/api/quests/${qid}/points/${pid}/conflation`, {
+      method: 'PATCH',
+      body: new URLSearchParams({ status: 'cancel'})
+    })
+    emit('cancelPoint')
+    route(`/quests/${qid}/points`)
   }
 
   function firstStep() {
@@ -300,7 +321,7 @@ export default function Matcher({qid, pid}) {
       <h3>Le point à trouver par ici :</h3>
       <p>{properties && Object.entries(properties)
         .filter(([k]) => MAIN_TAGS.concat('name').indexOf(k) !== -1)
-        .map(([k, v]) => `${k  }=${  v}`)
+        .map(([k, v]) => `${k}=${v}`)
         .join(', ') || ''
       }</p>
       <div className={style.actions}>
@@ -318,9 +339,38 @@ export default function Matcher({qid, pid}) {
           disabled={createConflationDisabled}>
           Créer
         </button>
+        <button onClick={impossibleToConflate}>
+          Impossible à rapprocher
+        </button>
+      </div>
+      <div>
+        {conflateFail ? <div>
+          <label htmlFor="conflateFailExplain">Conflation impossible pourquoi ?</label>
+          <input type="text"
+                 id="conflateFailExplain"
+                 list={"alreadyExplained"}
+                 onChange={e => emit('dumb', {conflateComment: e.target.value})}
+          />
+          <datalist id={"alreadyExplained"}>
+            {conflateAnswers
+              .concat('déjà existant mais un way')
+              .reduce((acc, cur) => {
+                if (acc.indexOf(cur) === -1) {
+                  return acc.concat(cur)
+                }
+                return acc
+              }, []).map(a => (<option value={a} />))}
+          </datalist>
+          <button onClick={sendComment}>Envoyer</button>
+        </div> : null
+        }
       </div>
       {renderMap()}
     </div>
+  }
+
+  function nothingToChange() {
+
   }
 
   function secondStep() {
@@ -356,6 +406,9 @@ export default function Matcher({qid, pid}) {
               disabled={!(typeof conflated === 'string') || !merged}
               onClick={clickEmit(ACTION_CHANGE_SET_ADD, {qid})}>
               Ajouter au changeset
+            </button>
+            <button onClick={nothingToChange}>
+              Rien à changer
             </button>
           </td>
         </tr>

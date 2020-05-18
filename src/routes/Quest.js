@@ -11,6 +11,7 @@ const filters = {
   todo: 'à faire',
   valid: 'En cours: modification',
   create: 'En cours: création',
+  cancel: 'Rapprochement compliqué',
   done: 'Traité',
 }
 
