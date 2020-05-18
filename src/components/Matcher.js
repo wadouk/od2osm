@@ -43,6 +43,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 })
 
+// const myMarker = require('../assets/marker-optimized.svg')
+
+const myIcon = L.divIcon({
+  html: `<svg viewBox="0 0 25 40" class="blue"><use href="/assets/marker-optimized.svg#hey"/></svg>`,
+  className: style.myMarker,
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+  ...L.Icon.Default.prototype.options
+})
+
 export default function Matcher({qid, pid}) {
   const [state, dispatch] = useContextReducer()
   const {point, radius, overpass, loaderOverpass, merged, conflated} = state
@@ -185,6 +194,7 @@ export default function Matcher({qid, pid}) {
       {renderCirclesOverpass()}
       <Marker draggable={true}
               position={defaultPosition}
+              // icon={myIcon}
               onMoveEnd={markerOpendataMoved}>
         <Popup>Opendata</Popup>
       </Marker>

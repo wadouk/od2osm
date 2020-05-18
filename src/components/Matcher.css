@@ -48,6 +48,11 @@
     border: orangered thin solid;
 }
 
+.myMarker {
+    background: none;
+    border: none;
+}
+
 .value {
     min-width: 15em;
     max-width: 15em;

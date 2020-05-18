@@ -19,6 +19,10 @@ const Home = () => (
       <li>S'il n'y a pas de blocage, l'application utilisera l'API publique d'OSM plus tard</li>
       <li><a href="https://github.com/wadouk/od2osm/issues">Vous pouvez faire vos commentaires ici ou sur le mail d'annonce sur talk-fr@osm</a></li>
     </ul>
+
+    <svg className={'blue'} width={25} height={40} viewBox={'0 0 25 40'} >
+      <use href={'/assets/marker-optimized.svg#hey'} />
+    </svg>
 	</div>
 );
 
