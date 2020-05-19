@@ -104,7 +104,7 @@ const start = async () => {
     options: {
       cors: true,
       payload: {
-        allow: 'application/x-www-form-urlencoded',
+        allow: [ 'application/x-www-form-urlencoded', 'application/json' ],
         parse: true
       },
     },
@@ -112,7 +112,7 @@ const start = async () => {
       try {
         const {params, payload} = request
         const {qid, pid, osmId} = params
-        const {status = 'valid'} = payload
+        const {status = 'valid'} = payload || {}
         await pool.query("delete from conflation where qid=$1 and pid=$2 and (action = 'valid' or action is null)", [qid, pid])
         await pool.query('insert into conflation (qid, pid, action, osmid) values ($1, $2, $3, $4)', [qid, pid, status, osmId])
         return h.response()
@@ -160,7 +160,7 @@ const start = async () => {
     options: {
       cors: true,
       payload: {
-        allow: 'application/x-www-form-urlencoded',
+        allow: [ 'application/x-www-form-urlencoded', 'application/json' ],
         parse: true
       },
     },
@@ -168,7 +168,7 @@ const start = async () => {
       try {
         const {params, payload} = request
         const {qid, pid} = params
-        const {status = 'create'} = payload
+        const {status = 'create'} = payload || {}
         await pool.query("delete from conflation where qid=$1 and pid=$2 and (action in ('valid', 'create', 'cancel') or action is null)", [qid, pid])
         await pool.query('insert into conflation (qid, pid, action) values ($1, $2, $3)', [qid, pid, status])
         return h.response()
