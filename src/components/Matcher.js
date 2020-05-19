@@ -317,8 +317,9 @@ export default function Matcher({qid, pid}) {
         <li>Des info bulles au clic permettent de les différencier</li>
         <li>Vous pouvez déplacer le marqueur OpenData</li>
         <li>Ou vous pouvez changer la taille de la zone de recherche (em mètres)</li>
+        <li>Le name est informatif et n'est pas utilisé dans la recherche seul les valeurs de {MAIN_TAGS.join((', '))} comptent</li>
       </ul>
-      <h3>Le point à trouver par ici :</h3>
+      <h3>Le point à trouver aux alentours possède les propriétés principales suivantes:</h3>
       <p>{properties && Object.entries(properties)
         .filter(([k]) => MAIN_TAGS.concat('name').indexOf(k) !== -1)
         .map(([k, v]) => `${k}=${v}`)
@@ -354,6 +355,8 @@ export default function Matcher({qid, pid}) {
           <datalist id={"alreadyExplained"}>
             {conflateAnswers
               .concat('déjà existant mais un way')
+              .concat('plusieurs points, impossible de choisir')
+              .concat('pas la bonne valeur d\'amenity ou shop')
               .reduce((acc, cur) => {
                 if (acc.indexOf(cur) === -1) {
                   return acc.concat(cur)
