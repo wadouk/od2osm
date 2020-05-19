@@ -141,7 +141,7 @@ const reducer = (state, {type, msg}) => {
     case 'nothingToChange':
       return (() => {
         const {merged, point, overpass, conflated, ...newState} = state
-        return {...newState, changes: []}
+        return {...newState}
       })()
 
     case 'cancelChanges':
