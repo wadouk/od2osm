@@ -112,7 +112,7 @@ export default function Matcher({qid, pid}) {
       body,
     }
 
-    const r = await fetch("http://overpass-api.de/api/interpreter", options)
+    const r = await fetch("//overpass-api.de/api/interpreter", options)
 
     return await r.json()
   }
