@@ -14,6 +14,6 @@ export default function Quests() {
   const {quests} = state
 
   return <ul>
-    {quests.map(({id, name}) => <Link href={`/quests/${id}/points`}>{name}</Link>)}
+    {quests.map(({id, name}) => <li><Link href={`/quests/${id}/points`}>{name}</Link></li>)}
   </ul>
 }

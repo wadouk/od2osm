@@ -47,7 +47,8 @@
     "preact": "^10.3.2",
     "preact-render-to-string": "^5.1.4",
     "preact-router": "^3.2.1",
-    "react-leaflet": "^2.6.3"
+    "react-leaflet": "^2.6.3",
+    "uuid": "^8.1.0"
   },
   "jest": {
     "preset": "jest-preset-preact",

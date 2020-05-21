@@ -1,6 +1,7 @@
 const Hapi = require('@hapi/hapi')
 const Inert = require('@hapi/inert')
 const Path = require('path')
+const {v4: uuid} = require('uuid')
 
 const {types, Pool} = require('pg')
 
@@ -26,9 +27,9 @@ const start = async () => {
 
     routes: {
       files: {
-        relativeTo: Path.join(__dirname, 'build')
-      }
-    }
+        relativeTo: Path.join(__dirname, 'build'),
+      },
+    },
   })
 
   await server.register(Inert)
@@ -53,8 +54,7 @@ const start = async () => {
       },
       handler: async () => {
         try {
-
-          const res = await pool.query('select * from quests')
+          const res = await pool.query('select distinct q.id, q.name, q.more_info_url from quests q inner join points p on q.id = p.qid')
           return res.rows
         } catch (e) {
           console.error(e)
@@ -104,8 +104,8 @@ const start = async () => {
     options: {
       cors: true,
       payload: {
-        allow: [ 'application/x-www-form-urlencoded', 'application/json' ],
-        parse: true
+        allow: ['application/x-www-form-urlencoded', 'application/json'],
+        parse: true,
       },
     },
     handler: async (request, h) => {
@@ -160,8 +160,8 @@ const start = async () => {
     options: {
       cors: true,
       payload: {
-        allow: [ 'application/x-www-form-urlencoded', 'application/json' ],
-        parse: true
+        allow: ['application/x-www-form-urlencoded', 'application/json'],
+        parse: true,
       },
     },
     handler: async (request, h) => {
@@ -184,7 +184,7 @@ const start = async () => {
       cors: true,
       payload: {
         allow: 'application/x-www-form-urlencoded',
-        parse: true
+        parse: true,
       },
       response: {
         emptyStatusCode: 204,
@@ -238,11 +238,54 @@ const start = async () => {
   })
 
   server.route({
+    method: 'PUT',
+    path: '/api/quests',
+    options: {
+      payload: {
+        allow: 'application/x-www-form-urlencoded',
+        parse: true,
+      },
+    },
+    handler: async (request, h) => {
+      try {
+        const {payload} = request
+        const {name, moreInfoUrl} = payload
+        const newUuid = uuid()
+
+        await pool.query("insert into quests (name, more_info_url, uuid) values ($1, $2, $3)", [name, moreInfoUrl, newUuid])
+
+        return h.response({uuid: newUuid}).code(201)
+      } catch (e) {
+        console.error(e)
+        return h.response({
+          constraint: e.constraint,
+          routine: e.routine,
+        }).code(500)
+      }
+    },
+  })
+
+  function decodePayload(part) {
+    let contentType = part.headers["content-type"]
+    if (/application\/(geo\+)?json/.test(contentType)) {
+      return part.payload
+    } else if (/application\/octet-stream/.test(contentType)) {
+      return JSON.parse(part.payload.toString())
+    }
+    let error = new Error("bad content type")
+    error.hey = 1
+    error.contentType = contentType
+    throw error
+  }
+
+  server.route({
     method: 'POST',
     path: '/api/quests',
     options: {
       payload: {
-        multipart: true,
+        multipart: {
+          output: 'annotated'
+        },
         parse: true,
         output: 'data',
         allow: 'multipart/form-data',
@@ -253,27 +296,51 @@ const start = async () => {
     },
     handler: async (request, h) => {
       const {payload} = request
-      const {geojson} = payload
-      const datas = JSON.parse(geojson.toString())
-
-      await pool.query('truncate table points')
-
-      for (const {id, geometry, properties} of datas.features.filter(({properties}) => Boolean(properties))) {
-        const {coordinates} = geometry
-        const p = hstore.stringify(properties)
-        const [x, y] = coordinates
-        const c = `(${x},${y})`
-
-        let params = [c, p, id, 1]
-        try {
-          await pool.query('insert into points (point, properties, id, qid) values ($1, $2, $3, $4)', params)
-        } catch (e) {
-          console.error(params, e)
-          break
-        }
+      const {geojson, uuid} = payload
+      if (!geojson || !uuid) {
+        return h.response().code(400).message('missing mandatory data')
       }
 
-      return h.response()
+      try {
+        const datas = decodePayload(geojson)
+
+        const res = await pool.query("select id from quests where uuid = $1", [uuid])
+        if (res.rows.length !== 1) {
+          return h.response().code(404).message('quests not found')
+        }
+        const qid = res.rows[0].id
+
+        const client = await pool.connect()
+        await client.query("begin")
+
+        try {
+          await client.query('delete from points where qid = $1', [qid])
+
+          for (const {id, geometry, properties} of datas.features.filter(({properties}) => Boolean(properties))) {
+            const {coordinates} = geometry
+            const [x, y] = coordinates
+            const c = `(${x},${y})`
+
+            const p = hstore.stringify(properties)
+
+            let params = [c, p, id, qid]
+            await client.query('insert into points (point, properties, id, qid) values ($1, $2, $3, $4)', params)
+          }
+          await client.query("commit")
+        } catch (e) {
+          await client.query("rollback")
+
+          console.error(e)
+          return h.response().code(400).message("invalid geojson")
+        } finally {
+          client.release()
+        }
+
+        return h.response()
+      } catch (e) {
+        console.error(e)
+        return h.response().code(400).message(e.hey === 1 ? e.message : "check your datas")
+      }
     },
   })
 

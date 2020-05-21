@@ -11,6 +11,7 @@ import Quests from '../routes/Quests'
 import Quest from '../routes/Quest'
 import Point from '../routes/Point'
 import Changes from '../routes/Changes'
+import AddQuest from '../routes/AddQuest'
 import {initReducer, ReducerContext} from '../reducer'
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           <Router history={createHashHistory()}>
             <Home path="/" />
             <Quests path="/quests" />
+            <AddQuest path="/quests/add" />
             <Quest path="/quests/:id/points" />
             <Point path="/quests/:qid/points/:pid" />
             <Authenticated path="/authenticated" />

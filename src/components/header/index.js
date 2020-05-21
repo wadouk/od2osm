@@ -15,7 +15,8 @@ export default function Header() {
     <div className={style.spacer} />
     <Link activeClassName={style.active} href={"/changes"}>{labelChanges}</Link>
     <nav>
-      <Link activeClassName={style.active} href={"/quests"}>Quests</Link>
+      <Link activeClassName={style.active} href={"/quests/add"}>Créer une quête</Link>
+      <Link activeClassName={style.active} href={"/quests"}>Les quêtes</Link>
     </nav>
     <Link activeClassName={style.active} href="/authenticated"><LoginStatus /></Link>
 	</header>

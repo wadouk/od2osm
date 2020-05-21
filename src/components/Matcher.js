@@ -27,13 +27,12 @@ import {
   useContextReducer,
 } from '../reducer'
 import {route} from 'preact-router'
+import {MAIN_TAGS} from '../osmConstants'
 
 function getOsmPoint(overpass) {
   const {elements} = overpass || {}
   return elements && elements.length > 0 && elements[0] || {}
 }
-
-const MAIN_TAGS = ['shop', 'amenity']
 
 delete L.Icon.Default.prototype._getIconUrl
 
