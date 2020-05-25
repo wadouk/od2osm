@@ -289,6 +289,7 @@ const start = async () => {
         parse: true,
         output: 'data',
         allow: 'multipart/form-data',
+        maxBytes: 1024 * 1024 * 50 // 50Mbo
       },
       response: {
         emptyStatusCode: 204,
