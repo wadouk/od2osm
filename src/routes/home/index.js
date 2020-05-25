@@ -6,7 +6,6 @@ const Home = () => (
 		<h1>OpenData vers OpenStreetMap</h1>
 		<p>Bienvenue !</p>
     <p>L'idée de cette application est de permettre d'ajouter les données de l'opendata à openstreetmap.</p>
-    <p>Pour l'instant un seul jeu de données OpenData est présent.</p>
     <ul>
       <li>Vous pouvez le consulter dans le lien Quests en haut</li>
       <li>Cela vous aménera aux points</li>
