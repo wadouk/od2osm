@@ -45,7 +45,7 @@ export default function Authenticated() {
   }
 
   return <div>
-    <h1>Authentifcation</h1>
+    <h1>Authentification</h1>
     <div>{buttonAuthenticated()}</div>
     <h1>En cas de problème, vider le local storage et recharger</h1>
     <div><button onClick={resetLocalStorage}>Bouton magique</button></div>

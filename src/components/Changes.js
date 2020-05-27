@@ -74,7 +74,7 @@ export default function Changes() {
   function renderChange({tags, ...props}) {
     const {action, id} = props
     return <div>
-      <h1>{action === 'valid' ? `Modificiation ${id}` : 'Création'}</h1>
+      <h1>{action === 'valid' ? `Modification ${id}` : 'Création'}</h1>
       <div>
         <h2>Attributs</h2>
         {renderTags(props)}
