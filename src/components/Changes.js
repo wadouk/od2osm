@@ -3,6 +3,7 @@ import {upload} from '../osmQueries'
 import Loader from './Loader'
 import {route} from 'preact-router'
 import {useEffect} from 'preact/hooks'
+import {TileLayer} from 'react-leaflet'
 
 export default function Changes() {
   const [state, dispatch] = useContextReducer()
@@ -109,6 +110,9 @@ export default function Changes() {
     <div>
       <label htmlFor="source">Source</label>
       <input type="text" value={source || ''} size={50} onChange={changeSource} />
+      <ul>
+        <li>Ajouter <i>BDOrtho IGN</i> en <i>source</i> si vous l'avez utiliser pour au moins un des points</li>
+      </ul>
     </div>
     <div>
       <button onClick={clickUpload} disabled={!comment || (changes && changes.length === 0) || loader === true}>Envoyer</button>

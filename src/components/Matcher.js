@@ -1,6 +1,6 @@
 import {useEffect} from 'preact/hooks'
 import L, {LatLng} from 'leaflet'
-import {Map, Marker, Popup, Rectangle, TileLayer} from 'react-leaflet'
+import {LayersControl, Map, Marker, Popup, Rectangle, TileLayer} from 'react-leaflet'
 import style from './Matcher.css'
 import Loader from './Loader'
 import {getMapBounds} from '../osmQueries'
@@ -177,10 +177,18 @@ export default function Matcher({qid, pid}) {
     let defaultPosition = new LatLng(point.point.y, point.point.x)
     const bbox = defaultPosition.toBounds(radius)
     return <Map bounds={bbox} className={style.leafletContainer}>
-      <TileLayer
-        attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        url='http://{s}.tile.osm.org/{z}/{x}/{y}.png'
-      />
+      <LayersControl position="topright">
+        <LayersControl.BaseLayer name={'OSM'} checked={true}>
+          <TileLayer
+            attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            url='http://{s}.tile.osm.org/{z}/{x}/{y}.png'
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name={'BD Ortho IGN'}>
+          <TileLayer url='https://proxy-ign.openstreetmap.fr/bdortho/{z}/{x}/{y}.jpg'
+          />
+        </LayersControl.BaseLayer>
+      </LayersControl>
       {renderCirclesOverpass()}
       <Marker draggable={true}
               position={defaultPosition}
@@ -287,11 +295,11 @@ export default function Matcher({qid, pid}) {
   async function sendComment() {
     await fetch(`/api/quests/${qid}/points/${pid}/comment`, {
       method: 'PATCH',
-      body: new URLSearchParams({ comment: conflateComment || ''})
+      body: new URLSearchParams({comment: conflateComment || ''}),
     })
     await fetch(`/api/quests/${qid}/points/${pid}/conflation`, {
       method: 'PATCH',
-      body: new URLSearchParams({ status: 'cancel'})
+      body: new URLSearchParams({status: 'cancel'}),
     })
     emit('cancelPoint')
     route(`/quests/${qid}/points`)
@@ -316,7 +324,9 @@ export default function Matcher({qid, pid}) {
         <li>Des info bulles au clic permettent de les différencier</li>
         <li>Vous pouvez déplacer le marqueur OpenData</li>
         <li>Ou vous pouvez changer la taille de la zone de recherche (em mètres)</li>
-        <li>Le name ou ref est informatif et n'est pas utilisé dans la recherche seul les valeurs de {MAIN_TAGS.join((', '))} comptent</li>
+        <li>Le name ou ref est informatif et n'est pas utilisé dans la recherche seul les valeurs
+          de {MAIN_TAGS.join((', '))} comptent
+        </li>
       </ul>
       <h3>Le point à trouver aux alentours possède les propriétés principales suivantes:</h3>
       <p>{properties && Object.entries(properties)
@@ -375,7 +385,7 @@ export default function Matcher({qid, pid}) {
     const osmId = overpass.elements[0].id
     await fetch(`/api/quests/${qid}/points/${pid}/conflation/${osmId}`, {
       method: 'PATCH',
-      body: new URLSearchParams({status: 'done'})
+      body: new URLSearchParams({status: 'done'}),
     })
     emit('nothingToChange')
     route(`/quests/${qid}/points`)
