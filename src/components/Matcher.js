@@ -93,7 +93,7 @@ export default function Matcher({qid, pid}) {
         .map(u => `node ["${k}"="${u}"](${bboxOverpass}); `).join("\n"),
       )[0]
 
-    return `[out:json] [timeout:25] ;\n ( \n${q} \n); out meta;`
+    return `[out:json] [timeout:25] ;\n( \n${q} \n); out meta;`
   }
 
   async function fetchOverpass() {
@@ -379,6 +379,10 @@ export default function Matcher({qid, pid}) {
         }
       </div>
       {renderMap()}
+
+      <p>La requête <a href={`http://overpass-turbo.eu/?Q=${encodeURIComponent(getOverpassQuery())}&C=${point.point.y};${point.point.x};18`} rel={'noopener nofollow'} target={'_new'}>overpass</a> exécutée est :
+        <pre>{getOverpassQuery()}</pre>
+      </p>
     </div>
   }
 
