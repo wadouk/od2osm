@@ -111,7 +111,7 @@ export default function Changes() {
       <label htmlFor="source">Source</label>
       <input type="text" value={source || ''} size={50} onChange={changeSource} />
       <ul>
-        <li>Ajouter <i>BDOrtho IGN</i> en <i>source</i> si vous l'avez utiliser pour au moins un des points</li>
+        <li>Ajouter <i>BDOrtho IGN</i> en <i>source</i> si vous l'avez utilisé pour au moins un des points</li>
       </ul>
     </div>
     <div>

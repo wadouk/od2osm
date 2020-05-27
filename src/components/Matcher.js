@@ -271,6 +271,7 @@ export default function Matcher({qid, pid}) {
   function wordingAction() {
     const wordings = []
     if (merged) {
+      wordings.push(<li>Pour supprimer un tag, il faut juste vider sa valeur</li>)
       if (conflated === 'valid' && overpass && overpass.elements.length > 0) {
         wordings.push(<li>Vous avez choisi d'éventuellement completer le point OSM existant avec les données de l'open
           data</li>)

@@ -11,6 +11,7 @@ export const ACTION_CANCEL_CONFLATION = 'actionCancelConflation'
 export const ACTION_CREATE_CONFLATION = 'actionCreateConflation'
 export const ACTION_MORE_OSM = 'moreOSM'
 export const ACTION_MORE_OD = 'moreOD'
+export const REMOVE_TAG = 'removeTag'
 export const ACTION_INPUT_VALUE = 'inputValue'
 export const ACTION_VALUE_OD = 'valueOD'
 export const ACTION_VALUE_OSM = 'valueOSM'
@@ -123,7 +124,7 @@ const reducer = (state, {type, msg}) => {
         })
         const newChanges = changes.filter(({pid}) => pid !== id).concat({
           ...element,
-          tags: merged,
+          tags: (Object.entries(merged).filter(([k, v]) => Boolean(v)).reduce((acc, [k, v]) => ({...acc, [k]: v}), {})),
           pid: id,
           qid,
           action: conflated,
