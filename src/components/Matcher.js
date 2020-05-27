@@ -181,11 +181,11 @@ export default function Matcher({qid, pid}) {
         <LayersControl.BaseLayer name={'OSM'} checked={true}>
           <TileLayer
             attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-            url='http://{s}.tile.osm.org/{z}/{x}/{y}.png'
+            url='//{s}.tile.osm.org/{z}/{x}/{y}.png'
           />
         </LayersControl.BaseLayer>
         <LayersControl.BaseLayer name={'BD Ortho IGN'}>
-          <TileLayer url='https://proxy-ign.openstreetmap.fr/bdortho/{z}/{x}/{y}.jpg'
+          <TileLayer url='//proxy-ign.openstreetmap.fr/bdortho/{z}/{x}/{y}.jpg'
           />
         </LayersControl.BaseLayer>
       </LayersControl>
