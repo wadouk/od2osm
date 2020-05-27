@@ -385,6 +385,13 @@ export default function Matcher({qid, pid}) {
         rel={'noopener nofollow'} target={'_new'}>overpass</a> exécutée est :
         <pre>{getOverpassQuery()}</pre>
       </p>)}
+      {point && (<p>Ouvrir la zone dans{" "}
+        <a
+          href={`https://www.openstreetmap.org/?mlat=${point.point.y}&mlon=${point.point.x}#map=21/${point.point.y}/${point.point.x}`}
+          rel={'noopener nofollow'} target={'_new'}>OSM</a>{" - "}
+        <a href={`https://www.openstreetmap.org/edit#map=21/${point.point.y}/${point.point.x}`}
+           rel={'noopener nofollow'} target={'_new'}>ID</a>
+      </p>)}
     </div>
   }
 
