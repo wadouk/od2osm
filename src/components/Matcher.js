@@ -201,7 +201,7 @@ export default function Matcher({qid, pid}) {
 
   const {properties} = point || {}
   const {tags} = getOsmPoint(overpass)
-  const allKeyTags = Object.keys({...tags, ...properties, ...merged}).concat('')
+  const allKeyTags = Object.keys({...tags, ...properties, ...merged}).filter(Boolean).concat('')
 
   let pointId = point && point.id
   useEffect(async () => {

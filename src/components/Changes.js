@@ -3,7 +3,6 @@ import {upload} from '../osmQueries'
 import Loader from './Loader'
 import {route} from 'preact-router'
 import {useEffect} from 'preact/hooks'
-import {TileLayer} from 'react-leaflet'
 
 export default function Changes() {
   const [state, dispatch] = useContextReducer()
