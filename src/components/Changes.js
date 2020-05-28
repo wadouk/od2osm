@@ -55,7 +55,7 @@ export default function Changes() {
 
       dispatch({type: 'loader', msg: {loader: false}})
       dispatch({type: 'changesSent'})
-      route('/quests')
+      route(`/quests${changes && changes.length > 0 && changes[0].qid ? `/${changes[0].qid}/points` : ''}`)
     } catch (e) {
       console.error(e)
       dispatch({type: 'loader', msg: {loader: false}})
