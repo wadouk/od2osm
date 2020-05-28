@@ -23,7 +23,7 @@ import {
   ACTION_RADIUS_CHANGED,
   ACTION_VALID_CONFLATION,
   ACTION_VALUE_OD,
-  ACTION_VALUE_OSM,
+  ACTION_VALUE_OSM, CHANGE_TAG,
   useContextReducer,
 } from '../reducer'
 import {route} from 'preact-router'
@@ -201,7 +201,7 @@ export default function Matcher({qid, pid}) {
 
   const {properties} = point || {}
   const {tags} = getOsmPoint(overpass)
-  const allKeyTags = Object.keys({...tags, ...properties})
+  const allKeyTags = Object.keys({...tags, ...properties, ...merged}).concat('')
 
   let pointId = point && point.id
   useEffect(async () => {
@@ -224,7 +224,12 @@ export default function Matcher({qid, pid}) {
 
     let warnOnMultipleValuesForMainTag = tagIsMainAndHasMultipleValues(merged)(v)
     return (<tr className={warnOnMultipleValuesForMainTag}>
-      <td className={cx(style.keys, {[style.warnThis]: warnOnMultipleValuesForMainTag})}>{v} :</td>
+      <td className={cx(style.keys, {[style.warnThis]: warnOnMultipleValuesForMainTag})}>
+        <input type="text"
+               value={v}
+               disabled={!merged}
+               onChange={(e) => emit(CHANGE_TAG, {newTagName: e.target.value, oldTagName: v})} /> :
+      </td>
       <td className={style.value}
           alt={showValue(properties)}
           title={showValue(properties)}
@@ -240,6 +245,7 @@ export default function Matcher({qid, pid}) {
       <td className={style.actions}>
         <input type="text"
                value={showValue(merged)}
+               disabled={!merged || !v}
                className={cx({[style.warnThis]: warnOnMultipleValuesForMainTag})}
                onChange={e => emit(ACTION_INPUT_VALUE, {key: v, value: e.target.value})} />
         <button
@@ -329,7 +335,7 @@ export default function Matcher({qid, pid}) {
           de {MAIN_TAGS.join((', '))} comptent
         </li>
       </ul>
-      <h3>Le point à trouver aux alentours possède les propriétés principales suivantes:</h3>
+      <h3>Le point à trouver, s'il existe déjà, aux alentours possède les propriétés principales suivantes:</h3>
       <p>{properties && Object.entries(properties)
         .filter(([k]) => MAIN_TAGS.concat(['name', 'ref']).indexOf(k) !== -1)
         .map(([k, v]) => `${k}=${v}`)

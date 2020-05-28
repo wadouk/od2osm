@@ -11,7 +11,7 @@ export const ACTION_CANCEL_CONFLATION = 'actionCancelConflation'
 export const ACTION_CREATE_CONFLATION = 'actionCreateConflation'
 export const ACTION_MORE_OSM = 'moreOSM'
 export const ACTION_MORE_OD = 'moreOD'
-export const REMOVE_TAG = 'removeTag'
+export const CHANGE_TAG = 'changeTag'
 export const ACTION_INPUT_VALUE = 'inputValue'
 export const ACTION_VALUE_OD = 'valueOD'
 export const ACTION_VALUE_OSM = 'valueOSM'
@@ -100,11 +100,27 @@ const reducer = (state, {type, msg}) => {
         return {...state, merged: newMerged}
       })()
 
+    case CHANGE_TAG:
+      return (() => {
+        const {merged} = state
+        if (!merged) {
+          return state
+        }
+        const {oldTagName, newTagName} = msg
+        const {[oldTagName]: v, ...oldMerged} = merged
+        const newMerged = {...oldMerged, [newTagName]: v}
+
+        return {...state, merged: newMerged}
+      })()
+
     case ACTION_INPUT_VALUE:
     case ACTION_VALUE_OD:
     case ACTION_VALUE_OSM:
       return (() => {
         const {merged} = state
+        if (!merged) {
+          return state
+        }
         const {key, value} = msg
         const newMerged = {...merged, [key]: value}
         return {...state, merged: newMerged}
@@ -124,7 +140,7 @@ const reducer = (state, {type, msg}) => {
         })
         const newChanges = changes.filter(({pid}) => pid !== id).concat({
           ...element,
-          tags: (Object.entries(merged).filter(([k, v]) => Boolean(v)).reduce((acc, [k, v]) => ({...acc, [k]: v}), {})),
+          tags: (Object.entries(merged).filter(([k, v]) => Boolean(k) && Boolean(v)).reduce((acc, [k, v]) => ({...acc, [k]: v}), {})),
           pid: id,
           qid,
           action: conflated,
