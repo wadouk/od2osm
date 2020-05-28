@@ -271,7 +271,7 @@ export default function Matcher({qid, pid}) {
   }
 
   function tagIsMainAndHasMultipleValues(keyValues) {
-    return (currentKey) => keyValues && keyValues[currentKey] && keyValues[currentKey].split(';').length > 1
+    return (currentKey) => keyValues && keyValues[currentKey] && MAIN_TAGS.some(t => t === currentKey) && keyValues[currentKey].split(';').length > 1
   }
 
   function wordingAction() {
