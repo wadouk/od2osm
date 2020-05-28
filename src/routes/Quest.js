@@ -28,7 +28,13 @@ export default function Quest({id}) {
 
   function renderPoint({name, pid, qid, action, inserted, osmid, cid}) {
     function displayStatus() {
-      return cid ? `${filters[action]} depuis le ${dayjs(inserted).locale('fr').format('LLLL')} ${osmid ? `osmid=${osmid}` : ''}` : ''
+      return cid ? (
+        <span>
+          {filters[action]} {' depuis le '}
+          {dayjs(inserted).locale('fr').format('LLLL')}
+          {' '}
+          {osmid ? <a href={`${process.env.PREACT_APP_OSM}/node/${osmid}`}>osmid={osmid}</a> : ''}
+        </span>) : ''
     }
 
     return <li>
