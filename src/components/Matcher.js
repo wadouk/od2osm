@@ -6,6 +6,7 @@ import Loader from './Loader'
 import {getMapBounds} from '../osmQueries'
 import cx from 'classnames'
 // eslint-disable-next-line no-unused-vars
+import leafletCss from 'leaflet/dist/leaflet.css'
 
 import {
   ACTION_ASYNC,
