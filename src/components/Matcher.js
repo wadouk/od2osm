@@ -5,9 +5,7 @@ import style from './Matcher.css'
 import Loader from './Loader'
 import {getMapBounds} from '../osmQueries'
 import cx from 'classnames'
-
 // eslint-disable-next-line no-unused-vars
-import leafletCss from 'leaflet/dist/leaflet.css'
 
 import {
   ACTION_ASYNC,
@@ -23,7 +21,8 @@ import {
   ACTION_RADIUS_CHANGED,
   ACTION_VALID_CONFLATION,
   ACTION_VALUE_OD,
-  ACTION_VALUE_OSM, CHANGE_TAG,
+  ACTION_VALUE_OSM,
+  CHANGE_TAG,
   useContextReducer,
 } from '../reducer'
 import {route} from 'preact-router'
@@ -175,8 +174,7 @@ export default function Matcher({qid, pid}) {
       return <Loader />
     }
     let defaultPosition = new LatLng(point.point.y, point.point.x)
-    const bbox = defaultPosition.toBounds(radius)
-    return <Map bounds={bbox} className={style.leafletContainer}>
+    return <Map viewport={{center: defaultPosition, zoom: 18}} className={style.leafletContainer}>
       <LayersControl position="topright">
         <LayersControl.BaseLayer name={'OSM'} checked={true}>
           <TileLayer
@@ -195,7 +193,7 @@ export default function Matcher({qid, pid}) {
               onMoveEnd={markerOpendataMoved}>
         <Popup>Opendata</Popup>
       </Marker>
-      <Rectangle bounds={bbox} />
+      <Rectangle bounds={defaultPosition.toBounds(radius)} />
     </Map>
   }
 
