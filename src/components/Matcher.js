@@ -69,7 +69,7 @@ export default function Matcher({qid, pid}) {
         })
         break
       case ACTION_CHANGE_SET_ADD:
-        route(`/changes`)
+        route(`/quests/${qid}/points`)
         break
     }
   }
