@@ -160,9 +160,22 @@ export default function Matcher({qid, pid}) {
     return elements && elements.length ? elements.map(renderCirclesElement) : null
   }
 
-  function renderCirclesElement({lon, lat}) {
+  function renderCirclesElement({lon, lat, id, type, tags}) {
+    let osmLink = `${process.env.PREACT_APP_OSM}/${type}/${id}`
     return <Marker position={{lon, lat}}>
-      <Popup>OSM</Popup>
+      <Popup>
+        <a href={osmLink} target="_new" rel={"nofollow noopener"} >OSM {type}={id}</a>
+        <table>
+          {Object.entries(tags)
+            .filter(([k]) => ['name', 'ref'].indexOf(k) !== -1)
+            .map(([k, v]) => {
+            return <tr>
+              <td>{k}</td>
+              <td>{v}</td>
+            </tr>
+          })}
+        </table>
+      </Popup>
     </Marker>
   }
 
@@ -430,6 +443,23 @@ export default function Matcher({qid, pid}) {
           </td>
         </tr>
         {allKeyTags.map(renderTags)}
+        <tr>
+          <td colSpan={3}>
+            <h4>Informations supplémentaires</h4>
+          </td>
+        </tr>
+        {['timestamp', 'version', 'changeset', 'user'].map(additionalInfo => {
+          return <tr>
+            <td>
+              {additionalInfo}
+            </td>
+            <td />
+            <td>
+              {getOsmPoint(overpass)[additionalInfo]}
+            </td>
+          </tr>
+        })}
+        <tr />
         <tr>
           <td colSpan={3}>
             <button
